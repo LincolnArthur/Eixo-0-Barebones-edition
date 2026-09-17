@@ -38,5 +38,5 @@ public class Personagem {
     public boolean estaMorto() {
         return vidaAtual <= 0;
     }
-    
+
 }
