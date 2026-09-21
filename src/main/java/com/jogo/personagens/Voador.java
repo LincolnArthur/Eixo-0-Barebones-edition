@@ -4,20 +4,20 @@ import java.util.Random;
 
 public class Voador extends Inimigo implements Esquivavel {
 
-    private int danoBase;
+    private Arma arma;
     private double chanceEsquiva;
     private Random gerador;
 
-    public Voador(String nome, int vidaMaxima, int danoBase, double chanceEsquiva) {
+    public Voador(String nome, int vidaMaxima, Arma arma, double chanceEsquiva) {
         super(nome, vidaMaxima);
-        this.danoBase = danoBase;
+        this.arma = arma;
         this.chanceEsquiva = chanceEsquiva;
         this.gerador = new Random();
     }
 
     @Override 
     public int atacar() {
-        return danoBase;
+        return arma.causarDano();
     }
 
     @Override

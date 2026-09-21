@@ -2,15 +2,15 @@ package com.jogo.personagens;
 
 public class Melee extends Inimigo {
 
-    private int danoBase;
+    private Arma arma;
 
-    public Melee(String nome, int vidaMaxima, int danoBase) {
+    public Melee(String nome, int vidaMaxima, Arma arma) {
         super(nome, vidaMaxima);
-        this.danoBase = danoBase;
+        this.arma = arma;
     }
 
     @Override
     public int atacar() {
-        return danoBase;
+        return arma.causarDano();
     }
 }

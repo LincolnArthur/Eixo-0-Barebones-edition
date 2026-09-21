@@ -1,10 +1,12 @@
 package com.jogo.personagens;
 
-import java.util.Random;
 //Molde pra classe projetil
 //Teoricamente, seria implementado com valores posicionais x e y
 //Como não tem interface gráfica, implementa só o dano
 //Pra ficar separado de outros tipos.
+
+import java.util.Random;
+
 public class Projetil {
     private int dano;
     private double chanceErrar;
@@ -14,6 +16,7 @@ public class Projetil {
         this.dano = dano;
         this.chanceErrar = chanceErrar;
         this.gerador = new Random();
+  
     }
 
     public int getDano() {
