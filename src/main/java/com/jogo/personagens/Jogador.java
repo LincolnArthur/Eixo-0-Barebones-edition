@@ -3,7 +3,7 @@ package com.jogo.personagens;
 import java.util.Random;
 //Para implementar a prob. de dano crítico
 
-public class Jogador extends Personagem {
+public class Jogador extends Personagem implements Atacante {
     private int danoBase;
     private double chanceCritico;
     private Random gerador;
@@ -15,6 +15,7 @@ public class Jogador extends Personagem {
         this.gerador = new Random(); //Gerar um valor rnd pra ver se crita
     }
 
+    @Override 
     public int atacar() {
         boolean critico = gerador.nextDouble() < chanceCritico;
         if (critico) {

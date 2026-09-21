@@ -5,12 +5,15 @@ package com.jogo.personagens;
 //Tipo abstrato, por conta do polimorfismo.
 //Cada tipo diferente de inimigo vai atacar de uma forma diferente
 //attack() é abstrato por isso.
-public abstract class Inimigo extends Personagem {
+public abstract class Inimigo extends Personagem implements Atacante {
 
     public Inimigo(String nome, int vidaMaxima) {
         super(nome, vidaMaxima);
     }
 
+
+    //Sem override pq não está sobrescrevendo, mas sim
+    //Redeclarando
     public abstract int atacar(); 
                                 //Com int o método vira consulta pura
                                 //Só calcula quanto o atk causaria sem

@@ -18,7 +18,9 @@ public  class Sniper extends Inimigo {
     //"EU TÔ LIADO QUE TÁ SOBRESCREVENDO E OU EU NÃO LIGO, OU FOI PQ EU QUIS"
 
     @Override
+    //Feito usando a classe projetil (que só devolve dano por agr)
     public int atacar() {
-        return danoBase;
+        Projetil projetil = new Projetil(danoBase);
+        return projetil.getDano();
     }
 }

@@ -1,6 +1,6 @@
 package com.jogo.personagens;
 
-public class Personagem {
+public class Personagem implements Atacavel{
 
     //O estado que cada personagem carrega individualmente
     private String nome; // private: Ninguém altera fora a classe
@@ -25,18 +25,22 @@ public class Personagem {
     }
 
     //Comportamentos: Ações que o personagem sabe executar
+
+    @Override
     public void tomarDano (int quantidade) {
         vidaAtual = vidaAtual - quantidade;
     }
     
-    //verifica se o character está com vida cheia
-    public boolean estaSaudavel() {
-        return vidaAtual == vidaMaxima;
-    }
 
     //Verifica se o character está morto
+    @Override 
     public boolean estaMorto() {
         return vidaAtual <= 0;
+    }
+
+       //verifica se o character está com vida cheia
+    public boolean estaSaudavel() {
+        return vidaAtual == vidaMaxima;
     }
 
 }
