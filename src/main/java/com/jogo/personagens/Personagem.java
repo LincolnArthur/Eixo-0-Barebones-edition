@@ -6,6 +6,8 @@ public class Personagem implements Atacavel{
     private String nome; // private: Ninguém altera fora a classe
     private int vidaAtual;
     private int vidaMaxima;
+    
+    
 
     //Construtor: Roda quando um new Personagem é criado
     public Personagem(String nome, int vidaMaxima) { 
@@ -13,6 +15,7 @@ public class Personagem implements Atacavel{
                           //Os dois tem o mesmo nome, então é necessário
         this.vidaAtual = vidaMaxima; // Cmc com vida cheia
         this.vidaMaxima = vidaMaxima;
+        
     }
 
     //Usa chamando um new
@@ -28,9 +31,11 @@ public class Personagem implements Atacavel{
 
     @Override
     public void tomarDano (int quantidade) {
-        vidaAtual = vidaAtual - quantidade;
+        if(quantidade<=0){
+            return;
+        }
+        this.vidaAtual=Math.max(0, this.vidaAtual - quantidade); //Garante que vida n fique negativa
     }
-    
 
     //Verifica se o character está morto
     @Override 
@@ -43,4 +48,5 @@ public class Personagem implements Atacavel{
         return vidaAtual == vidaMaxima;
     }
 
+    
 }
