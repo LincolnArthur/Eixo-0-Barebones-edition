@@ -1,8 +1,8 @@
 package com.jogo.personagens;
 
-//Primeiro tipo de inimigo
+//Tipo de inimigo com range 
 public  class Sniper extends Inimigo {
-    //Só um parâmetro novo, o resto puxa da superclasse
+    //Só um parâmetro novo, o resto puxa da superclasse -lincoln
     private Arma arma;
 
     //Construtor
@@ -13,11 +13,12 @@ public  class Sniper extends Inimigo {
 
     //@Override é uma anotação, que é uma marcação que se coloca no código afim
     //de dar informação extra à IDE
-    //Nesse casp ela diz:
+    //Nesse caso ela diz:
     //"EU TÔ LIGADO QUE TÁ SOBRESCREVENDO E OU EU NÃO LIGO, OU FOI PQ EU QUIS"
+    //-lincoln
 
+    //Usado dentro de arma, como parametro de arma de fogo -lincoln
     @Override
-    //Feito usando a classe projetil (que só devolve dano por agr)
     public int atacar() {
         return arma.causarDano();
     }

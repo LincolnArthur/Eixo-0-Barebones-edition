@@ -3,17 +3,17 @@ package com.jogo.personagens;
 public class Personagem implements Atacavel{
 
     //O estado que cada personagem carrega individualmente
-    private String nome; // private: Ninguém altera fora a classe
+    private String nome; // private: Ninguém altera fora a classe -lincoln
     private int vidaAtual;
     private int vidaMaxima;
     
     
 
-    //Construtor: Roda quando um new Personagem é criado
+    //Construtor: Roda quando um new Personagem é criado -lincoln
     public Personagem(String nome, int vidaMaxima) { 
         this.nome = nome; //this: separa o parâmetro do construtor do da classe
                           //Os dois tem o mesmo nome, então é necessário
-        this.vidaAtual = vidaMaxima; // Cmc com vida cheia
+        this.vidaAtual = vidaMaxima; // Cmc com vida cheia -lincoln
         this.vidaMaxima = vidaMaxima;
         
     }
@@ -22,7 +22,7 @@ public class Personagem implements Atacavel{
     //Tipo struct
     //Personagem Herói = new Personagem("Herói", 20)
 
-    //Pega o nome do obj gerado com o new
+    //Pega o nome do obj gerado com o new -lincoln
     public String getNome() {
         return nome;
     }
@@ -34,16 +34,16 @@ public class Personagem implements Atacavel{
         if(quantidade<=0){
             return;
         }
-        this.vidaAtual=Math.max(0, this.vidaAtual - quantidade); //Garante que vida n fique negativa
+        this.vidaAtual=Math.max(0, this.vidaAtual - quantidade); //Garante que vida n fique negativa -Raioni
     }
 
-    //Verifica se o character está morto
+    //Verifica se o character está morto -lincoln
     @Override 
     public boolean estaMorto() {
         return vidaAtual <= 0;
     }
 
-       //verifica se o character está com vida cheia
+       //verifica se o character está com vida cheia -lincoln
     public boolean estaSaudavel() {
         return vidaAtual == vidaMaxima;
     }

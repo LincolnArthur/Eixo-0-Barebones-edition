@@ -1,7 +1,10 @@
 package com.jogo.personagens;
 
 import java.util.Random;
-
+//Esse enemy é oq mais faz coisa
+//Ele tem a arma (importado de Arma) que tem chance de critico
+//e tem a chance de se esquivar (interface esquivavel) por isso precisa de dois geradores
+//Pra evitar que os dois dependam do mesmo numero aleatorio -lincoln
 public class Voador extends Inimigo implements Esquivavel {
 
     private Arma arma;
@@ -33,7 +36,7 @@ public class Voador extends Inimigo implements Esquivavel {
     @Override
     public void tomarDano(int quantidade) {
         if (tentarEsquivar()) {
-            return; // esquivou -> nenhum dano aplicado
+            return; // esquivou -> nenhum dano aplicado -lincoln
         }
         super.tomarDano(quantidade);
     }

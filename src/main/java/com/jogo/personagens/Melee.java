@@ -1,5 +1,7 @@
 package com.jogo.personagens;
 
+//Meio auto-explicativo isso
+//De diferente só tem arma sendo utilizada -lincoln
 public class Melee extends Inimigo {
 
     private Arma arma;

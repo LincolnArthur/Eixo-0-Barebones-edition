@@ -2,7 +2,7 @@ package com.jogo.personagens;
 
 public class Dash extends Habilidade {
 
-    public Dash(boolean aprendida,double tempoEspera, int custoEnergia,  double duracao) {
+    public Dash(boolean aprendida, double tempoEspera, int custoEnergia, double duracao) {
         super(aprendida, tempoEspera,custoEnergia,  duracao);
     }
 

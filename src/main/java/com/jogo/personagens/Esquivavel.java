@@ -1,7 +1,8 @@
 package com.jogo.personagens;
 
 
-//Aplica uma chance do ataque errar o player, ou inimigo
+//Cria um metodo que permite que o inimigo (ou o player) desvie de algum ataque
+//-lincoln
 public interface Esquivavel {
     boolean tentarEsquivar();
 }

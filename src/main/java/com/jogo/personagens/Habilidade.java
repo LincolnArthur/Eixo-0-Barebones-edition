@@ -1,13 +1,15 @@
 package com.jogo.personagens;
 
+
+//Classe abstrata que cria as habilidades utilizaveis pelo player -lincoln
 public abstract class Habilidade {
     private boolean aprendida;
     private double tempoEspera;
-    private double duracao; // duracao da habilidade sendo usada até acabar
+    private double duracao; // duracao da habilidade sendo usada até acabar -Raioni
     private int custoEnergia;
 
 
-    //Construtor do escopo basico de uma habilidade
+    //Construtor do escopo basico de uma habilidade -Raioni
     public Habilidade (boolean aprendida, double tempoEspera, int custoEnergia, double duracao){
         this.aprendida = aprendida;
         this.tempoEspera=tempoEspera;
@@ -27,11 +29,11 @@ public abstract class Habilidade {
         return this.custoEnergia;
     }
 
-    public boolean isAprendida(){ //usa 'is' para retorno boleano no lugar do get
+    public boolean isAprendida(){ //usa 'is' para retorno boleano no lugar do get -Raioni
         return this.aprendida;
     }
     
-    public void setTempoEspera( double tempoEspera){
+    public void setTempoEspera( double tempoEspera){ //usa 'set' pra definir ao invés de retornar -lincoln
         this.tempoEspera=tempoEspera;
     }
     public void setApredida(boolean aprendida){

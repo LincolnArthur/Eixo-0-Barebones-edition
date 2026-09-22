@@ -3,7 +3,7 @@ package com.jogo.personagens;
 //Molde pra classe projetil
 //Teoricamente, seria implementado com valores posicionais x e y
 //Como não tem interface gráfica, implementa só o dano
-//Pra ficar separado de outros tipos.
+//Pra ficar separado de outros tipos. -lincoln
 
 import java.util.Random;
 
