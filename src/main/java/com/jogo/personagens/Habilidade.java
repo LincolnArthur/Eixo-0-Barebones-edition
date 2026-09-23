@@ -36,7 +36,7 @@ public abstract class Habilidade {
     public void setTempoEspera( double tempoEspera){ //usa 'set' pra definir ao invés de retornar -lincoln
         this.tempoEspera=tempoEspera;
     }
-    public void setApredida(boolean aprendida){
+    public void setAprendida(boolean aprendida){
         this.aprendida= aprendida;
     }
 
