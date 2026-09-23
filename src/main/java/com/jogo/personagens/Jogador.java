@@ -9,13 +9,17 @@ public class Jogador extends Personagem implements Atacante {
     private Nivel nivel;
     //private List<Habilidade> habilidades;
     
-    
+    private final Inventario inventario; //cada jogador tem seu inventario
+
     public Jogador(String nome, int vidaMaxima, Arma arma, int energiaMaxima) {
         super(nome, vidaMaxima);
 
         this.energiaAtual= energiaMaxima; //Criei 'energia' para funcionar como a mana -Raioni
         this.energiaMaxima = energiaMaxima; 
         this.arma = arma;
+
+        this.inventario= new Inventario(); //Vou criar minha classe Inventario que guarda os itens - raioni
+        this.inventario.adicionar(arma); //COloquei minha arma inicial no inventario - raioni
     }
 
 
