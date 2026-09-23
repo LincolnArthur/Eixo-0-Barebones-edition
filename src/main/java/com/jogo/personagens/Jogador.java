@@ -6,6 +6,8 @@ public class Jogador extends Personagem implements Atacante {
     private Arma arma;
     private int energiaAtual;
     private int energiaMaxima;
+    private Nivel nivel;
+    //private List<Habilidade> habilidades;
     
     
     public Jogador(String nome, int vidaMaxima, Arma arma, int energiaMaxima) {
@@ -32,6 +34,17 @@ public class Jogador extends Personagem implements Atacante {
             return;
         }
         this.energiaAtual= Math.max(0,energiaAtual - custoEnergia);
+    }
+
+    public void ganharExperiencia(int quantidade) {
+        boolean subiuNivel = nivel.ganharExperiencia(quantidade);
+        if (subiuNivel) {
+            //Logica de habilidade -lincoln
+        }
+    }
+
+    public int getEnergiaMaxima() {
+        return this.energiaMaxima;
     }
 
     //Causa dano por meio da arma, não de um danoBase definido

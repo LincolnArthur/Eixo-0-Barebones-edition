@@ -5,7 +5,9 @@ package com.jogo.personagens;
 //Tipo abstrato, por conta do polimorfismo.
 //Cada tipo diferente de inimigo vai atacar de uma forma diferente
 //attack() é abstrato por isso. -lincoln
-public abstract class Inimigo extends Personagem implements Atacante {
+public abstract class Inimigo extends Personagem implements Atacante, ConcedeExperiencia {
+
+    private int experienciaConcedida;
 
     public Inimigo(String nome, int vidaMaxima) {
         super(nome, vidaMaxima);
@@ -25,4 +27,10 @@ public abstract class Inimigo extends Personagem implements Atacante {
     //pra inserir mais tarde logicas entre
     //o cálculo e a aplicação, sem precisar
     //mexer em muita coisa (abstração) -lincoln
+
+
+    @Override
+    public int getExperienciaConcedida() {
+        return experienciaConcedida;
+    }
 }
