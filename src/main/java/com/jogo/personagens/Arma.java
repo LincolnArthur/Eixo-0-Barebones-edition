@@ -8,12 +8,12 @@ import java.util.Random;
 //A relação entre causar dano e o dano base é definida aqui, mas o ato de causar dano é concreto e n muda mais (final)
 //-lincoln
 
-public abstract class Arma implements Item {
+public abstract class Arma implements Inventariavel{
 
     private double chanceCritico;
     private Random gerador;
 
-    private final String id; //Informações que cada classe considerada um Item vai ter que ter
+    private final String id; //Informações de cada classe que pode ir pro inventario
     private final String nome; //ass raioni
     private final String descricao;
 
@@ -30,11 +30,24 @@ public abstract class Arma implements Item {
     //E o critico é igual pra todas as armas
     //-lincoln
 
-    // São as definições de metodos da INterface Item 
+    // São as definições de metodos da INterface Inventariavel
     //ONde basicamente dou um nome,ID e descrição pra cada arma criada ass Raioni
-    @Override public String getId() { return id; }
-    @Override public String getNome() { return nome; }
-    @Override public String getDescricao() { return descricao; }
+    @Override public String getId() { 
+        return id; 
+    }
+    @Override 
+    public String getNome() { 
+        return nome; 
+    }
+    @Override
+    public String getDescricao() { 
+        return descricao; 
+    }
+    @Override 
+    public boolean podeSerEquipado(){ 
+        return true; 
+    }
+
     public final int causarDano() {
         int danoBase = calcularDanoBase();
         boolean critico = gerador.nextDouble() < chanceCritico;

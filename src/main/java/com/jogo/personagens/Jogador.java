@@ -56,4 +56,15 @@ public class Jogador extends Personagem implements Atacante {
     public int atacar() {
        return arma.causarDano();
     }
+
+    public boolean equiparArma(String idArma){
+        Inventariavel objetoInventariavel = inventario.buscar(idArma);
+        if(objetoInventariavel == null || !objetoInventariavel.podeSerEquipado()){
+            return false;
+        }
+        this.arma = (Arma) objetoInventariavel; //Garanto que oq vai para o campo de arma
+                                                // vai ser equipavel e realmente uma arma, se nao for dá erro
+        return true;
+    }
+
 }
