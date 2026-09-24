@@ -7,8 +7,8 @@ public class ArmaDeFogo extends Arma {
     private int dano;
     private double chanceErrar;
 
-    public ArmaDeFogo(int dano, double chanceErrar, double chanceCritico) {
-        super(chanceCritico);
+    public ArmaDeFogo(String id, String nome, String descricao, int dano, double chanceErrar, double chanceCritico) {
+        super(id, nome, descricao, chanceCritico); // adicionou as informações da arma de fogo
         this.dano = dano;
         this.chanceErrar = chanceErrar;
     }

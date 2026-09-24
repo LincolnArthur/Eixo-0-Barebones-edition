@@ -6,8 +6,8 @@ package com.jogo.personagens;
 public class Espada extends Arma {
     private int dano;
 
-    public Espada(int dano, double chanceCritico) {
-        super(chanceCritico);
+    public Espada(String id, String nome, String descricao, int dano, double chanceCritico) {
+        super(id, nome, descricao, chanceCritico); // informaçẽos da arma
         this.dano = dano;
     }
 

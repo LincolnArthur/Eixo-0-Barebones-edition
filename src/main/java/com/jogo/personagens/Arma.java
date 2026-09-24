@@ -8,20 +8,48 @@ import java.util.Random;
 //A relação entre causar dano e o dano base é definida aqui, mas o ato de causar dano é concreto e n muda mais (final)
 //-lincoln
 
-public abstract class Arma {
+public abstract class Arma implements Inventariavel{
+
+    private static int contadorInstancias = 0;
 
     private double chanceCritico;
     private Random gerador;
 
-    public Arma(double chanceCritico) {
+    private final String id; //Informações de cada classe que pode ir pro inventario
+    private final String nome; //ass raioni
+    private final String descricao;
+
+    public Arma(String idBase, String nome, String descricao, double chanceCritico) {
         this.chanceCritico = chanceCritico;
         this.gerador = new Random();
+        this.id = idBase + "-" + (++contadorInstancias); //Informações da arma
+        this.nome = nome;
+        this.descricao = descricao;
     }
 
     //É final pois é imutavel
     //O calc do danoBase é o mesmo pra TODOS
     //E o critico é igual pra todas as armas
     //-lincoln
+
+    // São as definições de metodos da INterface Inventariavel
+    //ONde basicamente dou um nome,ID e descrição pra cada arma criada ass Raioni
+    @Override public String getId() { 
+        return id; 
+    }
+    @Override 
+    public String getNome() { 
+        return nome; 
+    }
+    @Override
+    public String getDescricao() { 
+        return descricao; 
+    }
+
+    @Override
+    public Categoria getCategoria() {
+        return Categoria.ARMA;
+    }
 
     public final int causarDano() {
         int danoBase = calcularDanoBase();
