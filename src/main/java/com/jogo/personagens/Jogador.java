@@ -17,6 +17,7 @@ public class Jogador extends Personagem implements Atacante {
         this.energiaAtual= energiaMaxima; //Criei 'energia' para funcionar como a mana -Raioni
         this.energiaMaxima = energiaMaxima; 
         this.arma = arma;
+        this.nivel = new Nivel(); //Nivel n tava sendo inicializado antes ai ficava NULL
 
         this.inventario= new Inventario(); //Vou criar minha classe Inventario que guarda os itens - raioni
         this.inventario.adicionar(arma); //COloquei minha arma inicial no inventario - raioni
@@ -58,13 +59,12 @@ public class Jogador extends Personagem implements Atacante {
     }
 
     public boolean equiparArma(String idArma){
-        Inventariavel objetoInventariavel = inventario.buscar(idArma);
-        if(objetoInventariavel == null || !objetoInventariavel.podeSerEquipado()){
-            return false;
+        Inventariavel objeto = inventario.buscar(idArma);
+        if (objeto instanceof Arma armaEncontrada) {
+            this.arma = armaEncontrada;
+            return true;
         }
-        this.arma = (Arma) objetoInventariavel; //Garanto que oq vai para o campo de arma
-                                                // vai ser equipavel e realmente uma arma, se nao for dá erro
-        return true;
+        return false;
     }
 
 }

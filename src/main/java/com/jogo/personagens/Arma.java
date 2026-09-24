@@ -10,6 +10,8 @@ import java.util.Random;
 
 public abstract class Arma implements Inventariavel{
 
+    private static int contadorInstancias = 0;
+
     private double chanceCritico;
     private Random gerador;
 
@@ -17,10 +19,10 @@ public abstract class Arma implements Inventariavel{
     private final String nome; //ass raioni
     private final String descricao;
 
-    public Arma(String id, String nome, String descricao, double chanceCritico) {
+    public Arma(String idBase, String nome, String descricao, double chanceCritico) {
         this.chanceCritico = chanceCritico;
         this.gerador = new Random();
-        this.id = id; //Informações da arma
+        this.id = idBase + "-" + (++contadorInstancias); //Informações da arma
         this.nome = nome;
         this.descricao = descricao;
     }
@@ -43,9 +45,10 @@ public abstract class Arma implements Inventariavel{
     public String getDescricao() { 
         return descricao; 
     }
-    @Override 
-    public boolean podeSerEquipado(){ 
-        return true; 
+
+    @Override
+    public Categoria getCategoria() {
+        return Categoria.ARMA;
     }
 
     public final int causarDano() {

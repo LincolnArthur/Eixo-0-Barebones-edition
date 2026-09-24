@@ -7,6 +7,6 @@ public interface Inventariavel {
     String getId();
     String getNome();
     String getDescricao();
-    boolean podeSerEquipado();
+    Categoria getCategoria();
     
 } 

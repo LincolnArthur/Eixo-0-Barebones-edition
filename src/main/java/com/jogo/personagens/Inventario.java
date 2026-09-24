@@ -1,66 +1,82 @@
 package com.jogo.personagens;
-import  java.util.ArrayList;
-import  java.util.List;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class Inventario {
 
-    //UMa lista que vai ter todos os itens do jogo ass Raioni
-    private final List<Inventariavel> objetos;  
+    private final Map<String, Inventariavel> itens; //Utiliza uma tabela hash pra definir os itens dos inventarios -lincoln
+    private final Map<String, Integer> quantidades;
 
-    public Inventario(){
-        this.objetos = new ArrayList<>();
-        // Como no inicio o inventario não tem nada então
-        // o construtor acaba só criando o inventario msm ass Raioni
+    public Inventario() { //Mesma coisa, lembrando que o Hash é encadeado -lincoln
+        this.itens = new LinkedHashMap<>();
+        this.quantidades = new LinkedHashMap<>();
     }
 
-    //Adiciona um item se for diferente de null e 
-    // retorna um true pra deixar claro que deu certo ass RAioni
-    public boolean adicionar(Inventariavel objeto){ 
-    //Estamos usando o nome "objeto" pq refere-se a coisas mais gerais
-    //que podem ser guardadas num inventario ass RAioni
-        if(objeto == null){
+
+    //Para adicionar itens no inventario, tem que ver se faz stack ou não
+    //Resolvi usando dois tipos de ID na categoria isEmpilhavel
+    //Nesse caso ele implementa verificando cada um pelo Id
+    //Se for empilhavel, add e aumenta o contador
+    //Se não for, adiciona num espaço diferente do inventario -lincoln
+    public boolean adicionar(Inventariavel objeto) {
+        if (objeto == null) {
             return false;
         }
-        this.objetos.add(objeto);
+        String id = objeto.getId();
+
+        if (itens.containsKey(id) && objeto.getCategoria().isEmpilhavel()) {
+            quantidades.put(id, quantidades.get(id) + 1);
+            return true;
+        }
+
+        if (itens.containsKey(id)) {
+            return false; // duplicata de algo não-empilhável, só pra garantir que não dê merda -lincoln
+        }
+
+        itens.put(id, objeto);
+        quantidades.put(id, 1);
         return true;
     }
-    //msm logica de adicionar, mas remove toda a referencia
-    // não o valor em si, ou seja, se for o msm ID vai apagar
-    // so aquele que eu joguei dentro do metodo ass RAIONI
-    public boolean remover(Inventariavel objeto){
-        if(objeto == null){
+
+    public boolean remover(String id) { //Remover usando a mesma logica de add só que ao contrario -lincoln
+        if (id == null || !itens.containsKey(id)) {
             return false;
         }
-        return this.objetos.remove(objeto);
-
+        int restante = quantidades.get(id) - 1;
+        if (restante <= 0) {
+            itens.remove(id);
+            quantidades.remove(id);
+        } else {
+            quantidades.put(id, restante);
+        }
+        return true;
     }
 
-    public Inventariavel buscar(String id){
-        if(id==null){
+    public Inventariavel buscar(String id) { //Busca o item no inventario pelo id dele -lincoln
+        if (id == null) {
             return null;
         }
-        for(Inventariavel item : this.objetos){
-            if(id.equals(item.getId())){
-                return item;
-            }
-        }
-        return null;
+        return itens.get(id);
     }
 
-    public boolean temItem(String id){
-        return buscar(id) != null;
-    }
-    public int quantidadeItem(){
-        return this.objetos.size();
-    }
-    public boolean inventarioVazio(){
-        return this.objetos.isEmpty();
+    public int quantidadeDe(String id) {
+        return quantidades.getOrDefault(id, 0);
     }
 
-    //Pelo oq eu procurei é melhor mandar uma copia da listade
-    // itens ao inves da lista em si pq garante que ninguem
-    //vai conseguir fazer add ou clear sem ser no ocalcerto
-    // pq a copyOf gera uma copia defensiva ass Raioni
-    public List<Inventariavel> getObjetos(){
-        return List.copyOf(this.objetos);
+    public boolean temItem(String id) {
+        return itens.containsKey(id);
+    }
+
+    public int quantidadeItem() {
+        return itens.size(); // quantidade de TIPOS distintos -lincoln
+    }
+
+    public boolean inventarioVazio() {
+        return itens.isEmpty();
+    }
+
+    public Map<String, Inventariavel> getItens() {
+        return Map.copyOf(itens);
     }
 }

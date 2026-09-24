@@ -3,15 +3,25 @@ package com.jogo.personagens;
 //Classe Pai para consumíveis, upgrades e chaves.
 public abstract class Item implements Inventariavel {
 
+    private static int contadorInstancias = 0;
+
     private final String id;
     private final String nome;
     private final String descricao;
+    private final Categoria categoria;
 
-    public Item(String id, String nome, String descricao) {
-        this.id = id;
+    public Item(String idBase, String nome, String descricao, Categoria categoria) {
+        this.categoria = categoria;
         this.nome = nome;
         this.descricao = descricao;
+
+        if (categoria.isEmpilhavel()) {
+            this.id = idBase;
+        } else {
+            this.id = idBase + "-" + (++contadorInstancias);
+        }
     }
+
 
     @Override 
     public String getId() { 
@@ -25,8 +35,10 @@ public abstract class Item implements Inventariavel {
     public String getDescricao() { 
         return descricao; 
     }
-    @Override 
-    public boolean podeSerEquipado(){ 
-        return true; 
+
+    @Override
+    public Categoria getCategoria() {
+        return categoria;
     }
+
 }
