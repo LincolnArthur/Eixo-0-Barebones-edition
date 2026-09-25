@@ -48,5 +48,11 @@ public class Personagem implements Atacavel{
         return vidaAtual == vidaMaxima;
     }
 
-    
+    // sobrescrita do toString() herdado de Object
+    // permite exibir informações do personagem de forma legivel, nemilha tinha pedido pra usar isso aqui na aula passada - hiago
+    @Override
+    public String toString() {
+        return nome + " [Vida: " + vidaAtual + "/" + vidaMaxima + (estaMorto() ? " (Morto)" : "") + "]";
+    }
+
 }

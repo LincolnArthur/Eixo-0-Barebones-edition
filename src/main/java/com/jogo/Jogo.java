@@ -26,8 +26,12 @@ public class Jogo {
             System.out.println("\n" + heroi.getNome() + " está morto?\n" + heroi.estaMorto() + "\n");
         } else {
             System.out.println(heroi.getNome() + "está saudável.\n");
-
         }
+
+        //teste do toString
+        System.out.println("Estado dos personagens com o tostring:\n");
+        System.out.println(goblin);
+        System.out.println(heroi);
 
 
     }
