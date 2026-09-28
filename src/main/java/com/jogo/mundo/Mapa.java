@@ -10,11 +10,15 @@ public class Mapa {
 
     private final String nome;
     private final Map<String, Sala> salas;
+    //Não podem ser trocados depois
+    
     private Sala salaInicial;
 
     public Mapa(String nome) {
         this.nome = nome;
         this.salas = new LinkedHashMap<>();
+        //O id é a chave e a sala é o valor
+        //Cada sala é uma consulta direta, como os .json
     }
 
     public String getNome() {

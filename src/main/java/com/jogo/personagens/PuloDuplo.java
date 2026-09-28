@@ -3,8 +3,8 @@ package com.jogo.personagens;
 public class PuloDuplo extends Habilidade {
     //Como ainda não foi usado engine não tem novos parametros pra usar -Raioni
 
-    public PuloDuplo(boolean aprendida,double tempoEspera, int custoEnergia,  double duracao) {
-        super(aprendida, tempoEspera,custoEnergia,  duracao);
+    public PuloDuplo(boolean aprendida, double tempoEspera, int custoEnergia, double tempoRestante,  double duracao) {
+        super(aprendida, tempoEspera, tempoRestante, custoEnergia, duracao);
     }
     @Override 
     public void executar(Jogador player){

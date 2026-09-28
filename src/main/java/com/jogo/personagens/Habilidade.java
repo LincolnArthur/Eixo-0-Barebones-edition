@@ -5,16 +5,22 @@ package com.jogo.personagens;
 public abstract class Habilidade {
     private boolean aprendida;
     private double tempoEspera;
+    private double tempoRestante;
     private double duracao; // duracao da habilidade sendo usada até acabar -Raioni
     private int custoEnergia;
 
 
     //Construtor do escopo basico de uma habilidade -Raioni
-    public Habilidade (boolean aprendida, double tempoEspera, int custoEnergia, double duracao){
+    public Habilidade (boolean aprendida, double tempoEspera, double tempoRestante, int custoEnergia, double duracao){
         this.aprendida = aprendida;
-        this.tempoEspera=tempoEspera;
+        this.tempoEspera= tempoEspera;
         this.custoEnergia = custoEnergia;
         this.duracao = duracao;
+        this.tempoRestante = 0.0;
+    }
+
+    public void atualizar(double dt) {
+        tempoRestante = Math.max(0.0, tempoRestante - dt);
     }
 
     public double getTempoEspera(){
@@ -40,6 +46,11 @@ public abstract class Habilidade {
         this.aprendida= aprendida;
     }
 
+    public boolean estaDisponivel() {
+        return tempoRestante <= 0.0;
+
+    }
+
     public void setCustoEnergia(int custoEnergia){
         this.custoEnergia=custoEnergia;
     }
@@ -47,14 +58,20 @@ public abstract class Habilidade {
         this.duracao=duracao;
     }
 
+    public boolean podeUsar(Jogador player) {
+        return isAprendida() && estaDisponivel() && player.energiaSuficiente(custoEnergia);
+    }
 
-    public boolean podeUsar(Jogador player){
-        if(isAprendida() && player.energiaSuficiente(custoEnergia)){
-            return true;
-        }else{
+    public final boolean usar(Jogador player) {
+        if (!podeUsar(player)) {
             return false;
         }
+        player.consumirEnergia(custoEnergia);
+        executar(player);
+        tempoRestante = tempoEspera;
+        return true;
     }
+
     public abstract void executar(Jogador usuario);
     
 }
