@@ -34,6 +34,13 @@ public abstract class Inimigo extends Personagem implements Atacante, ConcedeExp
         if (vitima != null && !vitima.estaMorto()) {
             Ataque ataque = new Ataque(this.atacar());
             ataque.aplicarEm(vitima);
+
+            // mss coisa que 
+            /*
+            int danoCalculado = this.atacar(); 
+            Ataque ataque = new Ataque(danoCalculado); 
+            ataque.aplicarEm(vitima);
+            */
         }
     }
 
