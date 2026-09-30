@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 //Tipo diferente de arma, utilizada em Sniper, por exemplo
 //Alem de implementar tudo de arma de fogo, ela calcula o dano

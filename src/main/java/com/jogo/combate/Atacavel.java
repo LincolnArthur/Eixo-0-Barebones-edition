@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 //Define os metodos de tomar dano e de morte -lincoln
 

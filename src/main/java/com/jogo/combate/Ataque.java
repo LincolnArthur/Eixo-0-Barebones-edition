@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 public class Ataque {
 

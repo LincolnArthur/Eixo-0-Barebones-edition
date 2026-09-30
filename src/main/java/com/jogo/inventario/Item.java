@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.inventario;
 
 //Classe Pai para consumíveis, upgrades e chaves.
 public abstract class Item implements Inventariavel {

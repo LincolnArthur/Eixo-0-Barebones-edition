@@ -1,4 +1,7 @@
-package com.jogo.personagens;
+package com.jogo.habilidades;
+
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Personagem;
 
 //Classe abstrata que cria as habilidades utilizaveis pelo player -lincoln
 public abstract class Habilidade {
@@ -60,15 +63,16 @@ public abstract class Habilidade {
         return isAprendida() && estaDisponivel() && player.energiaSuficiente(custoEnergia);
     }
 
-    public final boolean usar(Jogador player) {
+    // alvo pode ser null pra habilidades que não miram em ninguém (ex: Apara, Dash) -lincoln
+    public final boolean usar(Jogador player, Personagem alvo) {
         if (!podeUsar(player)) {
             return false;
         }
         player.consumirEnergia(custoEnergia);
-        executar(player);
+        executar(player, alvo);
         tempoRestante = tempoEspera;
         return true;
     }
 
-    public abstract void executar(Jogador usuario);
+    public abstract void executar(Jogador usuario, Personagem alvo);
 }

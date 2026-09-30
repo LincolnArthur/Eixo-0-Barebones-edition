@@ -1,6 +1,9 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 import java.util.Random;
+
+import com.jogo.inventario.Categoria;
+import com.jogo.inventario.Inventariavel;
 
 //Define a classe abstrata Arma
 //Nela são criados os parametros e metodos de dano crítico

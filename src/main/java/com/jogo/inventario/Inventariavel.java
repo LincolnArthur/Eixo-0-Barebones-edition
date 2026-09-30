@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.inventario;
 
 
 //A criação dessa Interface garante que diferentes classes possam 

@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 
 //Cria um metodo que permite que o inimigo (ou o player) desvie de algum ataque

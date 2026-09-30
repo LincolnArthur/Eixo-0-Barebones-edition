@@ -1,4 +1,6 @@
-package com.jogo.personagens;
+package com.jogo.combate;
+
+import com.jogo.personagens.Personagem;
 
 //Cria o metodo atacar -lincoln
 

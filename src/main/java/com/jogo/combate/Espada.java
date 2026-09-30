@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 //Arma simples, que só devolve dano, mais nenhum adicional
 //Puxa o super de Arma, ent já tem Dano crítico (e java random) por indução
 //-lincoln

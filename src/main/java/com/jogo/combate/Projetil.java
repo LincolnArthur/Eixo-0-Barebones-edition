@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.combate;
 
 //Molde pra classe projetil
 //Teoricamente, seria implementado com valores posicionais x e y

@@ -1,4 +1,4 @@
-package com.jogo.personagens;
+package com.jogo.inventario;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
