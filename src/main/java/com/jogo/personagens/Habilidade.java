@@ -11,6 +11,10 @@ public abstract class Habilidade {
 
 
     //Construtor do escopo basico de uma habilidade -Raioni
+    public Habilidade(boolean aprendida, double tempoEspera, int custoEnergia, double duracao) {
+        this(aprendida, tempoEspera, 0.0, custoEnergia, duracao);
+    }
+
     public Habilidade (boolean aprendida, double tempoEspera, double tempoRestante, int custoEnergia, double duracao){
         this.aprendida = aprendida;
         this.tempoEspera= tempoEspera;

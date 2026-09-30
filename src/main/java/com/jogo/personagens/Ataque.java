@@ -12,7 +12,9 @@ public class Ataque {
         return dano;
     }
 
-    public void aplicarEm(Personagem alvo) {
-        alvo.tomarDano(dano);
+    public void aplicarEm(Atacavel alvo) {
+        if(alvo != null && !alvo.estaMorto()) {
+            alvo.tomarDano(dano);
+        }
     }
 }

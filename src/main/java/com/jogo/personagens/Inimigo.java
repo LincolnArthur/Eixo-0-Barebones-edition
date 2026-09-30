@@ -28,6 +28,14 @@ public abstract class Inimigo extends Personagem implements Atacante, ConcedeExp
     //o cálculo e a aplicação, sem precisar
     //mexer em muita coisa (abstração) -lincoln
 
+    // Implementação de Atacante: cria o Ataque com o dano calculado e aplica na vítima
+    @Override
+    public void iniciarAtaque(Personagem vitima) {
+        if (vitima != null && !vitima.estaMorto()) {
+            Ataque ataque = new Ataque(this.atacar());
+            ataque.aplicarEm(vitima);
+        }
+    }
 
     @Override
     public int getExperienciaConcedida() {
