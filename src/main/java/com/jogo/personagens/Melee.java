@@ -1,5 +1,7 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.Espada;
+
 public class Melee extends Inimigo {
 
     public Melee(String nome, int vidaMaxima, int dano, double chanceCritico) {

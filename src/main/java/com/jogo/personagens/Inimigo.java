@@ -1,5 +1,9 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.Arma;
+import com.jogo.combate.Atacante;
+import com.jogo.combate.Ataque;
+import com.jogo.combate.ConcedeExperiencia;
 
 //Classe herda metodos e estados da superclasse
 //Tipo abstrato, por conta do polimorfismo.

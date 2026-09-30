@@ -1,5 +1,11 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.Arma;
+import com.jogo.combate.Atacante;
+import com.jogo.combate.Ataque;
+import com.jogo.inventario.Inventariavel;
+import com.jogo.inventario.Inventario;
+
 public class Jogador extends Personagem implements Atacante {
     //Implementa o metodo de ataque por meio
     //da classe abstrata Arma -lincoln

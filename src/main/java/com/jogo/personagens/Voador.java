@@ -2,6 +2,9 @@ package com.jogo.personagens;
 
 import java.util.Random;
 
+import com.jogo.combate.Espada;
+import com.jogo.combate.Esquivavel;
+
 //Esse enemy é oq mais faz coisa
 //Ele tem a arma (agora travada como Espada) que tem chance de critico
 //e tem a chance de se esquivar (interface esquivavel) por isso precisa de dois geradores

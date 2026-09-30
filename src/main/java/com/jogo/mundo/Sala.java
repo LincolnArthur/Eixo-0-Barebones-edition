@@ -1,7 +1,8 @@
 package com.jogo.mundo;
 
+import com.jogo.inventario.Inventariavel;
 import com.jogo.personagens.Inimigo;
-import com.jogo.personagens.Inventariavel;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;

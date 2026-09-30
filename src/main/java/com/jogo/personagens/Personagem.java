@@ -1,5 +1,7 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.Atacavel;
+
 public class Personagem implements Atacavel {
 
     private String nome;

@@ -1,5 +1,7 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.ArmaDeFogo;
+
 public class Sniper extends Inimigo {
 
     public Sniper(String nome, int vidaMaxima, int dano, double chanceErrar, double chanceCritico) {
