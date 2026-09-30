@@ -1,6 +1,5 @@
 package com.jogo.personagens;
 
-
 //Classe abstrata que cria as habilidades utilizaveis pelo player -lincoln
 public abstract class Habilidade {
     private boolean aprendida;
@@ -12,15 +11,11 @@ public abstract class Habilidade {
 
     //Construtor do escopo basico de uma habilidade -Raioni
     public Habilidade(boolean aprendida, double tempoEspera, int custoEnergia, double duracao) {
-        this(aprendida, tempoEspera, 0.0, custoEnergia, duracao);
-    }
-
-    public Habilidade (boolean aprendida, double tempoEspera, double tempoRestante, int custoEnergia, double duracao){
         this.aprendida = aprendida;
-        this.tempoEspera= tempoEspera;
+        this.tempoEspera = tempoEspera;
         this.custoEnergia = custoEnergia;
         this.duracao = duracao;
-        this.tempoRestante = 0.0;
+        this.tempoRestante = 0.0; // toda habilidade nasce disponível, sem cooldown ativo
     }
 
     public void atualizar(double dt) {
@@ -43,23 +38,22 @@ public abstract class Habilidade {
         return this.aprendida;
     }
     
-    public void setTempoEspera( double tempoEspera){ //usa 'set' pra definir ao invés de retornar -lincoln
-        this.tempoEspera=tempoEspera;
+    public void setTempoEspera(double tempoEspera){ //usa 'set' pra definir ao invés de retornar -lincoln
+        this.tempoEspera = tempoEspera;
     }
     public void setAprendida(boolean aprendida){
-        this.aprendida= aprendida;
+        this.aprendida = aprendida;
     }
 
     public boolean estaDisponivel() {
         return tempoRestante <= 0.0;
-
     }
 
     public void setCustoEnergia(int custoEnergia){
-        this.custoEnergia=custoEnergia;
+        this.custoEnergia = custoEnergia;
     }
     public void setDuracao(double duracao){
-        this.duracao=duracao;
+        this.duracao = duracao;
     }
 
     public boolean podeUsar(Jogador player) {
@@ -77,5 +71,4 @@ public abstract class Habilidade {
     }
 
     public abstract void executar(Jogador usuario);
-    
 }

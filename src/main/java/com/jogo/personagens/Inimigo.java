@@ -7,43 +7,23 @@ package com.jogo.personagens;
 //attack() é abstrato por isso. -lincoln
 public abstract class Inimigo extends Personagem implements Atacante, ConcedeExperiencia {
 
+    private final Arma arma;
     private int experienciaConcedida;
 
-    public Inimigo(String nome, int vidaMaxima) {
+    public Inimigo(String nome, int vidaMaxima, Arma arma) {
         super(nome, vidaMaxima);
+        this.arma = arma;
     }
 
 
-    //Sem override pq não está sobrescrevendo
-    //só redeclarando -lincoln
-    public abstract int atacar();
-    //Não precisa saber que "Arma" existe pq ele
-    //não possui nenhuma definição de calculo de dano -lincoln
-
-    
-    //Com int o método vira consulta pura
-    //Só calcula quanto o atk causaria sem
-    //tocar em mais nada. Isso abre espaço
-    //pra inserir mais tarde logicas entre
-    //o cálculo e a aplicação, sem precisar
-    //mexer em muita coisa (abstração) -lincoln
-
-    // Implementação de Atacante: cria o Ataque com o dano calculado e aplica na vítima
+    // Igual pra QUALQUER inimigo: cria o Ataque a partir da própria arma e aplica -lincoln
     @Override
     public void iniciarAtaque(Personagem vitima) {
-        if (vitima != null && !vitima.estaMorto()) {
-            Ataque ataque = new Ataque(this.atacar());
-            ataque.aplicarEm(vitima);
-
-            // mss coisa que 
-            /*
-            int danoCalculado = this.atacar(); 
-            Ataque ataque = new Ataque(danoCalculado); 
-            ataque.aplicarEm(vitima);
-            */
-        }
+        Ataque ataque = new Ataque(arma.causarDano());
+        ataque.aplicarEm(vitima);
     }
 
+    
     @Override
     public int getExperienciaConcedida() {
         return experienciaConcedida;
