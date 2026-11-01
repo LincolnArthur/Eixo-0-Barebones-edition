@@ -28,7 +28,7 @@ public class Jogador extends Personagem implements Atacante {
         this.inventario= new Inventario(); //Vou criar minha classe Inventario que guarda os itens - raioni
         this.inventario.adicionar(arma); //COloquei minha arma inicial no inventario - raioni
     }
-
+    
 
     public int getEnergiaAtual(){ //manda a energia atual do meu personagem -Raioni
         return this.energiaAtual;

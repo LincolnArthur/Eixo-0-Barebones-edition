@@ -17,6 +17,18 @@ public class Personagem implements Atacavel {
     public String getNome() {
         return nome;
     }
+    public void setVidaMaxima(int vidaMaxima){
+        this.vidaMaxima=vidaMaxima;
+    }
+    public int getVidaMaxima(){
+        return this.vidaMaxima;
+    }
+    public int getVidaAtual(){
+     return this.vidaAtual;   
+    }
+    public void setVidaAtual(int vidaAtual){
+        this.vidaAtual=vidaAtual;
+    }
 
     @Override
     public void tomarDano(int quantidade) {
