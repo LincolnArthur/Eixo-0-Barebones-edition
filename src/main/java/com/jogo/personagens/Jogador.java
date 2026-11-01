@@ -33,6 +33,9 @@ public class Jogador extends Personagem implements Atacante {
     public int getEnergiaAtual(){ //manda a energia atual do meu personagem -Raioni
         return this.energiaAtual;
     }
+    public void setEnergiaAtual(int energia){
+        this.energiaAtual=energia;
+    }
     public boolean energiaSuficiente(int custoEnergia){ // retorna se tenho energia suficiente pra aquilo -Raioni
         if(this.energiaAtual >= custoEnergia){
             return true;
