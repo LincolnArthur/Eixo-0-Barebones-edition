@@ -1,12 +1,7 @@
 package com.jogo.inventario;
-import com.jogo.inventario.Categoria;
 import com.jogo.personagens.Jogador;
 
 public class ModuloCura extends Item implements Consumivel {
-    private final String id;
-    private final String nome;
-    private final String descricao;
-    private final Categoria categoria;
     private int quantidadeDeCura;
 
     public ModuloCura(String id,String nome,String descricao,Categoria categoria,int quantidadeDeCura){
