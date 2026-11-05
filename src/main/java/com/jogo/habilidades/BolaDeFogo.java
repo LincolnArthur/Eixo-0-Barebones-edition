@@ -1,23 +1,11 @@
 package com.jogo.habilidades;
 
-import com.jogo.combate.Ataque;
-import com.jogo.personagens.Jogador;
-import com.jogo.personagens.Personagem;
-
-public class BolaDeFogo extends Habilidade {
-    private int dano;
+//Um golpe de energia concreto. Herda o dano e o executar() do
+//GolpeDeEnergia; um efeito extra (ex: queimadura) entraria aqui,
+//sobrescrevendo o executar() e chamando super.executar().
+public class BolaDeFogo extends GolpeDeEnergia {
 
     public BolaDeFogo(boolean aprendida, double tempoEspera, int custoEnergia, double duracao, int dano) {
-        super(aprendida, tempoEspera, custoEnergia, duracao);
-        this.dano = dano;
-    }
-
-    @Override
-    public void executar(Jogador usuario, Personagem alvo) {
-        if (alvo == null) {
-            return; //Sem alvo, não tem em quem aplicar dano -lincoln
-        }
-        Ataque ataque = new Ataque(dano);
-        ataque.aplicarEm(alvo);
+        super(aprendida, tempoEspera, custoEnergia, duracao, dano);
     }
 }

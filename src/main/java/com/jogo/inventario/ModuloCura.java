@@ -9,15 +9,10 @@ public class ModuloCura extends Item implements Consumivel {
         this.quantidadeDeCura=quantidadeDeCura;
 
     }
+    //O módulo só diz quanto cura; o limite da vida máxima e o
+    //"não cura morto" ficam no curar() do Personagem
     @Override
-    public void efeito(Jogador jogador){      
-        if(this.quantidadeDeCura>=0 && jogador.getVidaAtual()>0){
-            int novaVida = jogador.getVidaAtual() + this.quantidadeDeCura;
-            int vidaMaxima = jogador.getVidaMaxima();
-            if(vidaMaxima<= novaVida){
-                jogador.setVidaAtual(vidaMaxima);
-            }else{
-                jogador.setVidaAtual(novaVida);}
-        }
+    public void efeito(Jogador jogador){
+        jogador.curar(this.quantidadeDeCura);
     }
 }

@@ -1,21 +1,24 @@
 package com.jogo.combate;
 
+
 //Tipo diferente de arma, utilizada em Sniper, por exemplo
 //Alem de implementar tudo de arma de fogo, ela calcula o dano
 //com base na classe projetil -lincoln
 public class ArmaDeFogo extends Arma {
     private int dano;
-    private double chanceErrar;
 
-    public ArmaDeFogo(String id, String nome, String descricao, int dano, double chanceErrar, double chanceCritico) {
+    public ArmaDeFogo(String id, String nome, String descricao, int dano, double chanceCritico) {
         super(id, nome, descricao, chanceCritico); // adicionou as informações da arma de fogo
         this.dano = dano;
-        this.chanceErrar = chanceErrar;
+    }
+
+    protected int dispararProjetil() {
+        Projetil projetil = new Projetil(dano);
+        return projetil.getDano();
     }
 
     @Override 
     protected int calcularDanoBase() {
-        Projetil projetil = new Projetil(dano, chanceErrar);
-        return projetil.getDano();
+        return dispararProjetil();
     }
 }
