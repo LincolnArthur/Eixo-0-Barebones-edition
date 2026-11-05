@@ -25,15 +25,6 @@ public class Personagem implements Atacavel {
     public String getNome() {
         return nome;
     }
-    public void setVidaMaxima(int vidaMaxima){
-        this.vidaMaxima=vidaMaxima;
-    }
-    public int getVidaMaxima(){
-        return this.vidaMaxima;
-    }
-    public int getVidaAtual(){
-     return this.vidaAtual;
-    }
 
     //Comportamentos: Ações que o personagem sabe executar
 
