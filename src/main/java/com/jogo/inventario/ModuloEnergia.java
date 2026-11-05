@@ -8,16 +8,10 @@ public class ModuloEnergia extends Item implements Consumivel{
         this.quantidadeEnergia = quantidadeEnergia;
 
     }
+    //Mesma ideia do ModuloCura: o limite da energia máxima fica
+    //no recuperarEnergia() do Jogador
     @Override
     public void efeito(Jogador jogador){
-        if(this.quantidadeEnergia>=0 && jogador.getEnergiaAtual()>=0){
-            int energiaMax=jogador.getEnergiaMaxima();
-            int novaEnergia = this.quantidadeEnergia + jogador.getEnergiaAtual();
-            if(energiaMax<=novaEnergia){
-                jogador.setEnergiaAtual(energiaMax);
-            }else{
-                jogador.setEnergiaAtual(novaEnergia);
-            }
-        }
+        jogador.recuperarEnergia(this.quantidadeEnergia);
     }
 }

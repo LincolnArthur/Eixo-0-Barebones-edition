@@ -1,28 +1,29 @@
 package com.jogo.combate;
+import java.util.List;
+import com.jogo.personagens.Personagem;
 
 //Molde pra classe projetil
 //Teoricamente, seria implementado com valores posicionais x e y
-//Como não tem interface gráfica, implementa só o dano
-//Pra ficar separado de outros tipos. -lincoln
-
-import java.util.Random;
-
+//Como não tem interface gráfica, a "linha de tiro" é a ordem da lista de alvos
+//Quem causa o dano é o projétil, usando Ataque
 public class Projetil {
     private int dano;
-    private double chanceErrar;
-    private Random gerador;
 
-    public Projetil(int dano, double chanceErrar) {
+    public Projetil(int dano) {
         this.dano = dano;
-        this.chanceErrar = chanceErrar;
-        this.gerador = new Random();
-  
     }
 
     public int getDano() {
-        if (gerador.nextDouble() < chanceErrar) {
-            return 0; //ERROU
-        }
         return dano;
+    }
+
+    // Projétil comum: para no primeiro alvo vivo
+    public void atingir(List<Personagem> alvos) {
+        for (Personagem alvo : alvos) {
+            if (!alvo.estaMorto()) {
+                new Ataque(dano).aplicarEm(alvo);
+                return;
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ import com.jogo.combate.Arma;
 import com.jogo.combate.Espada;
 import com.jogo.habilidades.Apara;
 import com.jogo.habilidades.BolaDeFogo;
+import com.jogo.habilidades.GolpeDeEnergia;
 import com.jogo.personagens.Melee;
 import com.jogo.personagens.Sniper;
 import com.jogo.personagens.Voador;
@@ -46,8 +47,8 @@ public class Jogo {
         Jogador jogador = new Jogador("Aventureiro", 100, espadaDoJogador, 50);
 
         Melee bandido = new Melee("Bandido", 30, 8, 0.1);
-        Sniper atirador = new Sniper("Atirador", 40, 12, 0.2, 0.05);
-        Voador morcego = new Voador("Morcego", 20, 6, 0.1, 0.3);
+        Sniper atirador = new Sniper("Atirador", 40, 12, 0.05); //chanceErrar saiu do Sniper/ArmaDeFogo
+        Voador morcego = new Voador("Morcego", 20, 6, 0.1);
 
         System.out.println("Antes do combate:");
         System.out.println(bandido);
@@ -67,7 +68,8 @@ public class Jogo {
 
         //=== Teste de habilidades: uma sem alvo (Apara) e uma com dano (GolpeDeEnergia) ===
         Apara apara = new Apara(true, 1.5, 5, 0.3);
-        BolaDeFogo golpe = new BolaDeFogo(true, 2.0, 15, 0.0, 20);
+        //Variável do tipo da mãe (GolpeDeEnergia) guardando um filho (BolaDeFogo): polimorfismo
+        GolpeDeEnergia golpe = new BolaDeFogo(true, 2.0, 15, 0.0, 20);
 
         System.out.println("\nUsando Apara (sem alvo):");
         boolean usouApara = apara.usar(jogador, null);
