@@ -64,7 +64,7 @@ public class Jogador extends Personagem implements Atacante {
     //Causa dano por meio da arma, não de um danoBase definido
     @Override  
     public void iniciarAtaque(Personagem vitima) {
-        Ataque ataque = new Ataque(arma.causarDano());
+        Ataque ataque = new Ataque(arma.causarDano(vitima));
         ataque.aplicarEm(vitima);
     }
 

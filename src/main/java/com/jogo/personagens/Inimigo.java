@@ -23,7 +23,7 @@ public abstract class Inimigo extends Personagem implements Atacante, ConcedeExp
     // Igual pra QUALQUER inimigo: cria o Ataque a partir da própria arma e aplica -lincoln
     @Override
     public void iniciarAtaque(Personagem vitima) {
-        Ataque ataque = new Ataque(arma.causarDano());
+        Ataque ataque = new Ataque(arma.causarDano(vitima));
         ataque.aplicarEm(vitima);
     }
 
