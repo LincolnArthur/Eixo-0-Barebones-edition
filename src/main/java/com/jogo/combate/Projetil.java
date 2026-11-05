@@ -19,10 +19,20 @@ public class Projetil {
 
     // Projétil comum: para no primeiro alvo vivo
     public void atingir(List<Personagem> alvos) {
+        atingir(alvos, 1);
+    }
+
+    // Projétil que atravessa: acerta até quantidadeMaxima alvos vivos,
+    // na ordem da "linha de tiro". Morto não conta, o tiro passa direto
+    public void atingir(List<Personagem> alvos, int quantidadeMaxima) {
+        int acertados = 0;
         for (Personagem alvo : alvos) {
+            if (acertados >= quantidadeMaxima) {
+                return;
+            }
             if (!alvo.estaMorto()) {
                 new Ataque(dano).aplicarEm(alvo);
-                return;
+                acertados++;
             }
         }
     }
