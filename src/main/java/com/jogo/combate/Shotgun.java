@@ -8,11 +8,12 @@ public class Shotgun extends ArmaDeFogo {
         this.quantidadeBalins = quantidadeBalins;
     }
 
+    //Cada balim é um tiro normal da ArmaDeFogo: reaproveita com super
     @Override
     protected int calcularDanoBase() {
         int total = 0;
         for (int i = 0; i < quantidadeBalins; i++) {
-            total += dispararProjetil();
+            total += super.calcularDanoBase();
         }
         return total;
     }

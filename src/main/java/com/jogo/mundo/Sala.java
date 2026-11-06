@@ -100,35 +100,6 @@ public class Sala {
         return Collections.unmodifiableList(itens);
     }
 
-    // Exibe o ambiente da sala no console de forma formatada
-    public void descrever() {
-        System.out.println("========== " + nome.toUpperCase() + " ==========");
-        System.out.println(descricao);
-        if (pontoDeSalvamento) {
-            System.out.println("[*] Ponto de Salvamento/Descanso disponível aqui!");
-        }
-
-        if (!itens.isEmpty()) {
-            System.out.print("Itens na sala: ");
-            for (Inventariavel item : itens) {
-                System.out.print("[" + item.getNome() + "] ");
-            }
-            System.out.println();
-        }
-
-        if (!inimigos.isEmpty()) {
-            System.out.print("Inimigos: ");
-            for (Inimigo ini : inimigos) {
-                String status = ini.estaMorto() ? "(Derrotado)" : "(Vivo)";
-                System.out.print("[" + ini.getNome() + " " + status + "] ");
-            }
-            System.out.println();
-        }
-
-        System.out.print("Saídas: ");
-        for (Map.Entry<String, Sala> s : saidas.entrySet()) {
-            System.out.print("[" + s.getKey() + " -> " + s.getValue().getNome() + "] ");
-        }
-        System.out.println("\n================================================");
-    }
+    //O antigo descrever(), que imprimia a sala, foi pra visão
+    //(TelaConsole.mostrarSala): a sala só guarda dados
 }

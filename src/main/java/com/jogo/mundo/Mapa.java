@@ -1,5 +1,7 @@
 package com.jogo.mundo;
 
+import com.jogo.excecoes.SalaNaoEncontradaException;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,13 +42,14 @@ public class Mapa {
     }
 
     // define manualmente a sala de início do jogador
-    public void definirSalaInicial(String idSala) {
+    //Antes só imprimia um aviso no console (o modelo não deve imprimir
+    //nada, isso é papel da visão). Agora avisa quem chamou com exceção
+    public void definirSalaInicial(String idSala) throws SalaNaoEncontradaException {
         Sala encontrada = salas.get(idSala);
-        if (encontrada != null) {
-            this.salaInicial = encontrada;
-        } else {
-            System.out.println("Aviso: Sala com ID '" + idSala + "' não encontrada no mapa.");
+        if (encontrada == null) {
+            throw new SalaNaoEncontradaException(idSala);
         }
+        this.salaInicial = encontrada;
     }
 
     public Sala getSalaInicial() {

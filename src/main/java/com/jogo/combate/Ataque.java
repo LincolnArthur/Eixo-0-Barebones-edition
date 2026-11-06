@@ -5,6 +5,9 @@ public class Ataque {
     private final int dano;
 
     public Ataque(int dano) {
+        if (dano < 0) {
+            throw new IllegalArgumentException("Dano não pode ser negativo: " + dano);
+        }
         this.dano = dano;
     }
 

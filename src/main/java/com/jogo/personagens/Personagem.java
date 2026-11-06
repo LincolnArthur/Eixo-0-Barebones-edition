@@ -11,6 +11,15 @@ public class Personagem implements Atacavel {
 
     //Construtor: Roda quando um new Personagem é criado -lincoln
     public Personagem(String nome, int vidaMaxima) {
+        //Validação: personagem sem nome ou sem vida é erro de quem
+        //escreveu o código, não algo que acontece jogando. Por isso
+        //IllegalArgumentException (não precisa de try/catch)
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("Personagem precisa de um nome");
+        }
+        if (vidaMaxima <= 0) {
+            throw new IllegalArgumentException("Vida máxima deve ser maior que zero: " + vidaMaxima);
+        }
         this.nome = nome; //this: separa o parâmetro do construtor do da classe
                           //Os dois tem o mesmo nome, então é necessário
         this.vidaAtual = vidaMaxima; // Cmc com vida cheia -lincoln
@@ -24,6 +33,16 @@ public class Personagem implements Atacavel {
     //Pega o nome do obj gerado com o new -lincoln
     public String getNome() {
         return nome;
+    }
+
+    //Só leitura: a visão (TelaConsole) e os testes precisam ver a vida.
+    //Não tem set: a vida só muda por tomarDano() e curar()
+    public int getVidaAtual() {
+        return vidaAtual;
+    }
+
+    public int getVidaMaxima() {
+        return vidaMaxima;
     }
 
     //Comportamentos: Ações que o personagem sabe executar

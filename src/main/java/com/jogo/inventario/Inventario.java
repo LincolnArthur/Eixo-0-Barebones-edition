@@ -1,6 +1,8 @@
 package com.jogo.inventario;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Inventario {
@@ -78,5 +80,19 @@ public class Inventario {
 
     public Map<String, Inventariavel> getItens() {
         return Map.copyOf(itens);
+    }
+
+    //Lista os itens de um tipo, na ordem em que entraram (o
+    //LinkedHashMap guarda a ordem). Método genérico: <T> é o tipo
+    //pedido, então listarDoTipo(Arma.class) já devolve List<Arma>,
+    //sem cast do lado de quem chama.
+    public <T> List<T> listarDoTipo(Class<T> tipo) {
+        List<T> encontrados = new ArrayList<>();
+        for (Inventariavel objeto : itens.values()) {
+            if (tipo.isInstance(objeto)) {
+                encontrados.add(tipo.cast(objeto));
+            }
+        }
+        return encontrados;
     }
 }

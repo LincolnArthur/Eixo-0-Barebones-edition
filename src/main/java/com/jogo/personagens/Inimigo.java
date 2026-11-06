@@ -9,10 +9,13 @@ import com.jogo.combate.ConcedeExperiencia;
 //Tipo abstrato, por conta do polimorfismo.
 //Cada tipo diferente de inimigo vai atacar de uma forma diferente
 //attack() é abstrato por isso. -lincoln
+//
+//getExperienciaConcedida() (da interface ConcedeExperiencia) não é
+//escrito aqui: cada filha é obrigada a dizer quanto vale. Antes era um
+//campo que nunca recebia valor, então todo inimigo dava 0 de XP.
 public abstract class Inimigo extends Personagem implements Atacante, ConcedeExperiencia {
 
     private final Arma arma;
-    private int experienciaConcedida;
 
     public Inimigo(String nome, int vidaMaxima, Arma arma) {
         super(nome, vidaMaxima);
@@ -27,9 +30,7 @@ public abstract class Inimigo extends Personagem implements Atacante, ConcedeExp
         ataque.aplicarEm(vitima);
     }
 
-    
-    @Override
-    public int getExperienciaConcedida() {
-        return experienciaConcedida;
+    public Arma getArma() {
+        return arma;
     }
 }

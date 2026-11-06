@@ -8,4 +8,10 @@ public class Voador extends Inimigo {
     public Voador(String nome, int vidaMaxima, int dano, double chanceCritico) {
         super(nome, vidaMaxima, new Espada("espada-voador", "Garra", "Arma de um inimigo voador", dano, chanceCritico));
     }
+
+    //Quanto XP vale derrotar esse inimigo (voador)
+    @Override
+    public int getExperienciaConcedida() {
+        return 25;
+    }
 }

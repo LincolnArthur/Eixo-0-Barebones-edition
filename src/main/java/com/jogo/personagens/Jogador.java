@@ -3,6 +3,9 @@ package com.jogo.personagens;
 import com.jogo.combate.Arma;
 import com.jogo.combate.Atacante;
 import com.jogo.combate.Ataque;
+import com.jogo.excecoes.ItemIncompativelException;
+import com.jogo.excecoes.ItemNaoEncontradoException;
+import com.jogo.inventario.Consumivel;
 import com.jogo.inventario.Inventariavel;
 import com.jogo.inventario.Inventario;
 
@@ -73,13 +76,48 @@ public class Jogador extends Personagem implements Atacante {
         ataque.aplicarEm(vitima);
     }
 
-    public boolean equiparArma(String idArma){
+    //Antes devolvia false quando dava errado, e quem chamava não sabia
+    //o motivo. Agora lança uma exceção diferente pra cada problema: o
+    //id não existe, ou existe mas não é uma arma
+    public void equiparArma(String idArma) throws ItemNaoEncontradoException, ItemIncompativelException {
         Inventariavel objeto = inventario.buscar(idArma);
-        if (objeto instanceof Arma armaEncontrada) {
-            this.arma = armaEncontrada;
-            return true;
+        if (objeto == null) {
+            throw new ItemNaoEncontradoException(idArma);
         }
-        return false;
+        if (!(objeto instanceof Arma armaEncontrada)) {
+            throw new ItemIncompativelException(idArma, "equipar como arma");
+        }
+        this.arma = armaEncontrada;
+    }
+
+    //Usa um consumível do inventário pelo id (ex: Módulo de Cura) e
+    //tira uma unidade dele. Mesmo esquema de exceções do equiparArma()
+    public void usarItem(String id) throws ItemNaoEncontradoException, ItemIncompativelException {
+        Inventariavel objeto = inventario.buscar(id);
+        if (objeto == null) {
+            throw new ItemNaoEncontradoException(id);
+        }
+        if (!(objeto instanceof Consumivel consumivel)) {
+            throw new ItemIncompativelException(id, "consumir");
+        }
+        consumivel.efeito(this);
+        inventario.remover(id);
+    }
+
+    public boolean coletarItem(Inventariavel item) {
+        return inventario.adicionar(item);
+    }
+
+    public Arma getArma() {
+        return arma;
+    }
+
+    public Nivel getNivel() {
+        return nivel;
+    }
+
+    public Inventario getInventario() {
+        return inventario;
     }
 
 }

@@ -8,6 +8,6 @@ public class PistolaDuplaDePlasma extends ArmaDeFogo {
 
     @Override
     protected int calcularDanoBase() {
-        return dispararProjetil() + dispararProjetil();
+        return super.calcularDanoBase() + super.calcularDanoBase(); //dois tiros normais da ArmaDeFogo
     }
 }

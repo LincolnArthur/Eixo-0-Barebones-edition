@@ -26,6 +26,10 @@ public abstract class Arma implements Inventariavel{
 
     // Construtor completo com tempoEspera (velocidade de uso da arma)
     public Arma(String idBase, String nome, String descricao, double chanceCritico, double tempoEspera) {
+        //Chance é probabilidade: tem que ficar entre 0 (nunca) e 1 (sempre)
+        if (chanceCritico < 0 || chanceCritico > 1) {
+            throw new IllegalArgumentException("Chance de crítico deve estar entre 0 e 1: " + chanceCritico);
+        }
         this.chanceCritico = chanceCritico;
         this.gerador = new Random();
         this.id = idBase + "-" + (++contadorInstancias); //Informações da arma
