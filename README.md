@@ -14,6 +14,8 @@ Por isso, não há necessidade de executar o código, apenas uma explicação al
 ```
 mvn clean compile exec:java   # roda a demonstração (classe com.jogo.Jogo)
 mvn test                      # roda os 82 testes JUnit 5 e gera a cobertura em target/site/jacoco/index.html
+mvn package                   # gera o executável target/Eixo0-Barebones.jar
+java -jar target/Eixo0-Barebones.jar
 ```
 
 # Documentação
