@@ -1,7 +1,10 @@
 package com.jogo.mundo;
 
+import com.jogo.armadilhas.DamageTarget;
+import com.jogo.armadilhas.Trap;
 import com.jogo.inventario.Inventariavel;
 import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Personagem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,9 +24,10 @@ public class Sala {
     // Usa LinkedHashMap para manter a ordem em que as saídas foram cadastradas
     private final Map<String, Sala> saidas;
 
-    // Entidades e itens contidos nesta sala
+    // Entidades, itens e armadilhas contidos nesta sala
     private final List<Inimigo> inimigos;
     private final List<Inventariavel> itens;
+    private final List<Trap> armadilhas;
 
     // Se é um ponto de salvamento/descanso (ex: banco de descanso)
     private boolean pontoDeSalvamento;
@@ -35,6 +39,7 @@ public class Sala {
         this.saidas = new LinkedHashMap<>();
         this.inimigos = new ArrayList<>();
         this.itens = new ArrayList<>();
+        this.armadilhas = new ArrayList<>();
         this.pontoDeSalvamento = false;
     }
 
@@ -100,6 +105,79 @@ public class Sala {
         return Collections.unmodifiableList(itens);
     }
 
+    public void adicionarArmadilha(Trap armadilha) {
+        if (armadilha != null) {
+            armadilhas.add(armadilha);
+        }
+    }
+
+    public void adicionarArmadilhas(List<Trap> novasArmadilhas) {
+        if (novasArmadilhas != null) {
+            for (Trap t : novasArmadilhas) {
+                adicionarArmadilha(t);
+            }
+        }
+    }
+
+    public List<Trap> getArmadilhas() {
+        return Collections.unmodifiableList(armadilhas);
+    }
+
+    /**
+     * Atualiza polimorficamente todas as armadilhas da sala (máquina de estados,
+     * temporizadores, gatilho de proximidade e colisão de dano contra o alvo).
+     */
+    public void atualizarArmadilhas(double deltaTime, DamageTarget alvo) {
+        if (alvo instanceof Personagem p) {
+            p.atualizar(deltaTime);
+        }
+        for (Trap armadilha : armadilhas) {
+            armadilha.update(deltaTime);
+            if (alvo != null && alvo.isAlive()) {
+                armadilha.checkTrigger(alvo);
+                armadilha.checkCollision(alvo);
+            }
+        }
+    }
+
     //O antigo descrever(), que imprimia a sala, foi pra visão
-    //(TelaConsole.mostrarSala): a sala só guarda dados
+    //(TelaConsole.mostrarSala): a sala só guarda dados.
+    //Mantido como utilitário de inspeção rápida e demonstração das armadilhas.
+    public void descrever() {
+        System.out.println("========== " + nome.toUpperCase() + " ==========");
+        System.out.println(descricao);
+        if (pontoDeSalvamento) {
+            System.out.println("[*] Ponto de Salvamento/Descanso disponível aqui!");
+        }
+
+        if (!itens.isEmpty()) {
+            System.out.print("Itens na sala: ");
+            for (Inventariavel item : itens) {
+                System.out.print("[" + item.getNome() + "] ");
+            }
+            System.out.println();
+        }
+
+        if (!inimigos.isEmpty()) {
+            System.out.print("Inimigos: ");
+            for (Inimigo ini : inimigos) {
+                String status = ini.estaMorto() ? "(Derrotado)" : "(Vivo)";
+                System.out.print("[" + ini.getNome() + " " + status + "] ");
+            }
+            System.out.println();
+        }
+
+        if (!armadilhas.isEmpty()) {
+            System.out.println("Armadilhas na sala (" + armadilhas.size() + "):");
+            for (Trap trap : armadilhas) {
+                System.out.println("  - " + trap);
+            }
+        }
+
+        System.out.print("Saídas: ");
+        for (Map.Entry<String, Sala> s : saidas.entrySet()) {
+            System.out.print("[" + s.getKey() + " -> " + s.getValue().getNome() + "] ");
+        }
+        System.out.println("\n================================================");
+    }
 }
