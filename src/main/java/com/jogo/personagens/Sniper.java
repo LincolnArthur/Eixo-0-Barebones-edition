@@ -1,25 +1,16 @@
 package com.jogo.personagens;
 
-//Tipo de inimigo com range 
-public  class Sniper extends Inimigo {
-    //Só um parâmetro novo, o resto puxa da superclasse -lincoln
-    private Arma arma;
+import com.jogo.combate.ArmaDeFogo;
 
-    //Construtor
-    public Sniper(String nome, int vidaMaxima, Arma arma) {
-        super(nome, vidaMaxima);
-        this.arma = arma;
+public class Sniper extends Inimigo {
+
+    public Sniper(String nome, int vidaMaxima, int dano, double chanceCritico) {
+        super(nome, vidaMaxima, new ArmaDeFogo("arma-fogo-inimigo", "Rifle", "Arma de um inimigo sniper", dano, chanceCritico));
     }
 
-    //@Override é uma anotação, que é uma marcação que se coloca no código afim
-    //de dar informação extra à IDE
-    //Nesse caso ela diz:
-    //"EU TÔ LIGADO QUE TÁ SOBRESCREVENDO E OU EU NÃO LIGO, OU FOI PQ EU QUIS"
-    //-lincoln
-
-    //Usado dentro de arma, como parametro de arma de fogo -lincoln
+    //Quanto XP vale derrotar esse inimigo (atirador, o mais perigoso)
     @Override
-    public int atacar() {
-        return arma.causarDano();
+    public int getExperienciaConcedida() {
+        return 35;
     }
 }

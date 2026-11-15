@@ -1,18 +1,16 @@
 package com.jogo.personagens;
 
-//Meio auto-explicativo isso
-//De diferente só tem arma sendo utilizada -lincoln
+import com.jogo.combate.Espada;
+
 public class Melee extends Inimigo {
 
-    private Arma arma;
-
-    public Melee(String nome, int vidaMaxima, Arma arma) {
-        super(nome, vidaMaxima);
-        this.arma = arma;
+    public Melee(String nome, int vidaMaxima, int dano, double chanceCritico) {
+        super(nome, vidaMaxima, new Espada("espada-inimigo", "Espada", "Arma de um inimigo melee", dano, chanceCritico));
     }
 
+    //Quanto XP vale derrotar esse inimigo (corpo a corpo)
     @Override
-    public int atacar() {
-        return arma.causarDano();
+    public int getExperienciaConcedida() {
+        return 20;
     }
 }

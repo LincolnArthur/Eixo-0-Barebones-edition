@@ -1,0 +1,322 @@
+classDiagram
+direction LR
+namespace combate {
+  class AdagaDupla {
+    -dano : int
+    -contadorGolpes : int
+    #calcularDanoBase() int
+    +reiniciarCombo()
+  }
+  class Arma {
+    <<abstract>>
+    -contadorInstancias : int$
+    -chanceCritico : double
+    -gerador : Random
+    -id : String
+    -nome : String
+    -descricao : String
+    -tempoEspera : double
+    +causarDano() int
+    +causarDano(Personagem) int
+    #calcularDanoBase(Personagem) int
+    #calcularDanoBase()* int
+  }
+  class ArmaDeFogo {
+    -dano : int
+    #dispararProjetil() int
+    #calcularDanoBase() int
+  }
+  class Atacante {
+    <<interface>>
+    +iniciarAtaque(Personagem)*
+  }
+  class Atacavel {
+    <<interface>>
+    +tomarDano(int)*
+    +estaMorto()* boolean
+  }
+  class Ataque {
+    -dano : int
+    +aplicarEm(Atacavel)
+  }
+  class ConcedeExperiencia {
+    <<interface>>
+    +getExperienciaConcedida()* int
+  }
+  class Espada {
+    -dano : int
+    #calcularDanoBase() int
+  }
+  class Marreta {
+    -dano : int
+    #calcularDanoBase() int
+    #calcularDanoBase(Personagem) int
+  }
+  class Perfurante {
+    <<interface>>
+    +getAlvosAtravessados()* int
+  }
+  class PistolaDuplaDePlasma {
+    #calcularDanoBase() int
+  }
+  class Projetil {
+    -dano : int
+    +atingir(List~Personagem~)
+    +atingir(List~Personagem~, int)
+  }
+  class RifleSniper {
+    -alvosAtravessados : int
+    +disparar(List~Personagem~)
+  }
+  class Sabre {
+    -dano : int
+    -golpe : int
+    +calcularDanoBase() int
+  }
+  class Shotgun {
+    -quantidadeBalins : int
+    #calcularDanoBase() int
+  }
+}
+namespace controle {
+  class Batalha {
+    -jogador : Jogador
+    -inimigos : List~Inimigo~
+    -tela : TelaConsole
+    +jogadorAtaca(Inimigo)
+    +turnoDosInimigos()
+    +usarHabilidade(Habilidade, Inimigo) boolean
+    +usarItem(String) boolean
+    +equiparArma(String) boolean
+    +dispararPerfurante(RifleSniper)
+    +jogadorVenceu() boolean
+    +jogadorPerdeu() boolean
+  }
+}
+namespace excecoes {
+  class ItemIncompativelException {
+  }
+  class ItemNaoEncontradoException {
+    -idItem : String
+  }
+  class JogoException {
+  }
+  class SalaNaoEncontradaException {
+  }
+}
+namespace habilidades {
+  class Apara {
+    +executar(Jogador, Personagem)
+  }
+  class BolaDeFogo {
+  }
+  class Dash {
+    +executar(Jogador, Personagem)
+  }
+  class GolpeDeEnergia {
+    <<abstract>>
+    -dano : int
+    +executar(Jogador, Personagem)
+  }
+  class Habilidade {
+    <<abstract>>
+    -aprendida : boolean
+    -tempoEspera : double
+    -tempoRestante : double
+    -duracao : double
+    -custoEnergia : int
+    +atualizar(double)
+    +estaDisponivel() boolean
+    +podeUsar(Jogador) boolean
+    +usar(Jogador, Personagem) boolean
+    +executar(Jogador, Personagem)*
+  }
+  class PuloDuplo {
+    +executar(Jogador, Personagem)
+  }
+}
+namespace inventario {
+  class Categoria {
+    -empilhavel : boolean
+    +values()$ Categoria[]
+    +valueOf(String)$ Categoria
+  }
+  class Consumivel {
+    <<interface>>
+    +efeito(Jogador)*
+  }
+  class Inventariavel {
+    <<interface>>
+    +getId()* String
+    +getNome()* String
+    +getDescricao()* String
+    +getCategoria()* Categoria
+  }
+  class Inventario {
+    -itens : Map~String, Inventariavel~
+    -quantidades : Map~String, Integer~
+    +adicionar(Inventariavel) boolean
+    +remover(String) boolean
+    +buscar(String) Inventariavel
+    +quantidadeDe(String) int
+    +temItem(String) boolean
+    +quantidadeItem() int
+    +inventarioVazio() boolean
+    +listarDoTipo(Class~T~) List~T~
+  }
+  class Item {
+    <<abstract>>
+    -contadorInstancias : int$
+    -id : String
+    -nome : String
+    -descricao : String
+    -categoria : Categoria
+  }
+  class ModuloCura {
+    -quantidadeDeCura : int
+    +efeito(Jogador)
+  }
+  class ModuloEnergia {
+    -quantidadeEnergia : int
+    +efeito(Jogador)
+  }
+}
+namespace jogo {
+  class Jogo {
+    +main(String[])$
+  }
+}
+namespace mundo {
+  class Mapa {
+    -nome : String
+    -salas : Map~String, Sala~
+    -salaInicial : Sala
+    +adicionarSala(Sala) boolean
+    +definirSalaInicial(String)
+    +buscarSala(String) Sala
+    +totalSalas() int
+  }
+  class Sala {
+    -id : String
+    -nome : String
+    -descricao : String
+    -saidas : Map~String, Sala~
+    -inimigos : List~Inimigo~
+    -itens : List~Inventariavel~
+    -pontoDeSalvamento : boolean
+    +conectar(String, Sala)
+    +conectarBidirecional(String, String, Sala)
+    +adicionarInimigo(Inimigo)
+    +adicionarItem(Inventariavel)
+  }
+}
+namespace personagens {
+  class Inimigo {
+    <<abstract>>
+    -arma : Arma
+    +iniciarAtaque(Personagem)
+  }
+  class Jogador {
+    -arma : Arma
+    -energiaAtual : int
+    -energiaMaxima : int
+    -nivel : Nivel
+    -inventario : Inventario
+    +recuperarEnergia(int)
+    +energiaSuficiente(int) boolean
+    +consumirEnergia(int)
+    +ganharExperiencia(int)
+    +iniciarAtaque(Personagem)
+    +equiparArma(String)
+    +usarItem(String)
+    +coletarItem(Inventariavel) boolean
+  }
+  class Melee {
+  }
+  class Nivel {
+    -nivelAtual : int
+    -experienciaAtual : int
+    -experienciaParaProximoNivel : int
+    +ganharExperiencia(int) boolean
+  }
+  class Personagem {
+    -nome : String
+    -vidaAtual : int
+    -vidaMaxima : int
+    +tomarDano(int)
+    +curar(int)
+    +estaMorto() boolean
+    +estaSaudavel() boolean
+    +toString() String
+  }
+  class Sniper {
+  }
+  class Voador {
+  }
+}
+namespace visao {
+  class TelaConsole {
+    -saida : PrintStream
+    +titulo(String)
+    +mostrarMensagem(String)
+    +mostrarErro(String)
+    +mostrarPersonagens(List~Personagem~)
+    +mostrarPersonagem(Personagem)
+    +mostrarJogador(Jogador)
+    +mostrarAtaque(String, Personagem, int)
+    +mostrarRecompensa(Inimigo, int)
+    +mostrarSala(Sala)
+  }
+}
+class Exception {
+  <<Java>>
+}
+Batalha --> "1" Jogador : jogador
+Batalha --> "*" Inimigo : inimigos
+Batalha --> "1" TelaConsole : tela
+Inventario --> "*" Inventariavel : itens
+Item --> "1" Categoria : categoria
+Mapa --> "*" Sala : salas
+Mapa --> "1" Sala : salaInicial
+Mapa ..> SalaNaoEncontradaException : lança
+Sala --> "*" Inimigo : inimigos
+Sala --> "*" Inventariavel : itens
+Inimigo --> "1" Arma : arma
+Jogador --> "1" Arma : arma
+Jogador --> "1" Nivel : nivel
+Jogador --> "1" Inventario : inventario
+Jogador ..> ItemNaoEncontradoException : lança
+Jogador ..> ItemIncompativelException : lança
+JogoException <|-- SalaNaoEncontradaException
+JogoException <|-- ItemIncompativelException
+JogoException <|-- ItemNaoEncontradoException
+Exception <|-- JogoException
+Personagem <|-- Jogador
+Atacante <|.. Jogador
+Inimigo <|-- Voador
+Inimigo <|-- Sniper
+Atacavel <|.. Personagem
+Inimigo <|-- Melee
+Personagem <|-- Inimigo
+Atacante <|.. Inimigo
+ConcedeExperiencia <|.. Inimigo
+Habilidade <|-- GolpeDeEnergia
+GolpeDeEnergia <|-- BolaDeFogo
+Habilidade <|-- Dash
+Habilidade <|-- Apara
+Habilidade <|-- PuloDuplo
+Item <|-- ModuloEnergia
+Consumivel <|.. ModuloEnergia
+Inventariavel <|.. Item
+Item <|-- ModuloCura
+Consumivel <|.. ModuloCura
+Arma <|-- Sabre
+ArmaDeFogo <|-- RifleSniper
+Perfurante <|.. RifleSniper
+Arma <|-- Marreta
+ArmaDeFogo <|-- PistolaDuplaDePlasma
+Arma <|-- Espada
+Arma <|-- ArmaDeFogo
+Arma <|-- AdagaDupla
+Inventariavel <|.. Arma
+ArmaDeFogo <|-- Shotgun

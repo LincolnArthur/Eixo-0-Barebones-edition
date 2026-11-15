@@ -1,36 +1,36 @@
 package com.jogo.personagens;
 
+import com.jogo.combate.Arma;
+import com.jogo.combate.Atacante;
+import com.jogo.combate.Ataque;
+import com.jogo.combate.ConcedeExperiencia;
 
 //Classe herda metodos e estados da superclasse
 //Tipo abstrato, por conta do polimorfismo.
 //Cada tipo diferente de inimigo vai atacar de uma forma diferente
 //attack() é abstrato por isso. -lincoln
+//
+//getExperienciaConcedida() (da interface ConcedeExperiencia) não é
+//escrito aqui: cada filha é obrigada a dizer quanto vale. Antes era um
+//campo que nunca recebia valor, então todo inimigo dava 0 de XP.
 public abstract class Inimigo extends Personagem implements Atacante, ConcedeExperiencia {
 
-    private int experienciaConcedida;
+    private final Arma arma;
 
-    public Inimigo(String nome, int vidaMaxima) {
+    public Inimigo(String nome, int vidaMaxima, Arma arma) {
         super(nome, vidaMaxima);
+        this.arma = arma;
     }
 
 
-    //Sem override pq não está sobrescrevendo
-    //só redeclarando -lincoln
-    public abstract int atacar();
-    //Não precisa saber que "Arma" existe pq ele
-    //não possui nenhuma definição de calculo de dano -lincoln
-
-    
-    //Com int o método vira consulta pura
-    //Só calcula quanto o atk causaria sem
-    //tocar em mais nada. Isso abre espaço
-    //pra inserir mais tarde logicas entre
-    //o cálculo e a aplicação, sem precisar
-    //mexer em muita coisa (abstração) -lincoln
-
-
+    // Igual pra QUALQUER inimigo: cria o Ataque a partir da própria arma e aplica -lincoln
     @Override
-    public int getExperienciaConcedida() {
-        return experienciaConcedida;
+    public void iniciarAtaque(Personagem vitima) {
+        Ataque ataque = new Ataque(arma.causarDano(vitima));
+        ataque.aplicarEm(vitima);
+    }
+
+    public Arma getArma() {
+        return arma;
     }
 }

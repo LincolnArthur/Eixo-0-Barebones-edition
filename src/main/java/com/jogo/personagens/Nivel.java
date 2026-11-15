@@ -14,12 +14,17 @@ public class Nivel {
     //Devolve true se subiu de nivel
     //Quem chama decide oq fazer com essa info -lincoln
     public boolean ganharExperiencia(int quantidade) {
-        experienciaAtual += quantidade;
-        if (experienciaAtual >= experienciaParaProximoNivel) {
-            subirNivel();
-            return true;
+        if (quantidade < 0) {
+            throw new IllegalArgumentException("Experiência não pode ser negativa: " + quantidade);
         }
-        return false;
+        experienciaAtual += quantidade;
+        //while (e não if): muito XP de uma vez pode subir mais de um nível
+        boolean subiu = false;
+        while (experienciaAtual >= experienciaParaProximoNivel) {
+            subirNivel();
+            subiu = true;
+        }
+        return subiu;
     }
 
     private void subirNivel() {
@@ -30,5 +35,13 @@ public class Nivel {
 
     public int getNivelAtual() {
         return nivelAtual;
+    }
+
+    public int getExperienciaAtual() {
+        return experienciaAtual;
+    }
+
+    public int getExperienciaParaProximoNivel() {
+        return experienciaParaProximoNivel;
     }
 }

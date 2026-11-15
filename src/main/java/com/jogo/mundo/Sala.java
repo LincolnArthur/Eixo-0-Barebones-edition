@@ -2,9 +2,10 @@ package com.jogo.mundo;
 
 import com.jogo.armadilhas.DamageTarget;
 import com.jogo.armadilhas.Trap;
+import com.jogo.inventario.Inventariavel;
 import com.jogo.personagens.Inimigo;
-import com.jogo.personagens.Inventariavel;
 import com.jogo.personagens.Personagem;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -139,7 +140,9 @@ public class Sala {
         }
     }
 
-    // Exibe o ambiente da sala no console de forma formatada
+    //O antigo descrever(), que imprimia a sala, foi pra visão
+    //(TelaConsole.mostrarSala): a sala só guarda dados.
+    //Mantido como utilitário de inspeção rápida e demonstração das armadilhas.
     public void descrever() {
         System.out.println("========== " + nome.toUpperCase() + " ==========");
         System.out.println(descricao);
