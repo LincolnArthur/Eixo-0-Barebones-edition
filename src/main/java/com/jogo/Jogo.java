@@ -22,6 +22,7 @@ import com.jogo.combate.RifleSniper;
 import com.jogo.combate.Sabre;
 import com.jogo.combate.Shotgun;
 import com.jogo.controle.Batalha;
+import com.jogo.controle.Dialogo;
 import com.jogo.excecoes.SalaNaoEncontradaException;
 import com.jogo.habilidades.Apara;
 import com.jogo.habilidades.BolaDeFogo;
@@ -33,6 +34,9 @@ import com.jogo.mundo.Sala;
 import com.jogo.personagens.Inimigo;
 import com.jogo.personagens.Jogador;
 import com.jogo.personagens.Melee;
+import com.jogo.personagens.Npc;
+import com.jogo.personagens.NpcCurandeiro;
+import com.jogo.personagens.NpcInformante;
 import com.jogo.personagens.Personagem;
 import com.jogo.personagens.Sniper;
 import com.jogo.personagens.Voador;
@@ -137,10 +141,50 @@ public class Jogo {
         tela.mostrarPersonagens(inimigos);
         tela.mostrarMensagem(batalha.jogadorVenceu() ? "Vitória!" : "Ainda há inimigos de pé.");
 
+        //=== NPCs amigáveis da sala (Npc, NpcInformante, NpcCurandeiro e o controle Dialogo) ===
+        demonstrarNpcs(tela, jogador, laboratorio);
+
         // =========================================================================
         // DEMONSTRAÇÃO: SISTEMA MODULAR DE ARMADILHAS (POO / SOLID / DESIGN PATTERNS)
         // =========================================================================
         demonstrarSistemaDeArmadilhas();
+    }
+
+    //NPCs amigáveis: mesma divisão do resto do main (monta as peças). Quem
+    //conversa é o Dialogo (controle); quem imprime é a TelaConsole (visão).
+    private static void demonstrarNpcs(TelaConsole tela, Jogador jogador, Sala sala) {
+        NpcInformante ze = new NpcInformante("Zé", List.of(
+                "Olá, viajante! Há armas e módulos espalhados pelas salas.",
+                "Use a Apara na hora certa pra não tomar dano.",
+                "No fim do caminho existe um chefe. Chegue com a vida cheia!"));
+        NpcCurandeiro vega = new NpcCurandeiro("Dra. Vega", List.of(
+                "Você parece ferido. Fique perto que eu cuido disso.",
+                "Só tenho uma cura por sala, então use com sabedoria."), 1);
+
+        //Lista do tipo da mãe (Npc) com objetos de duas filhas: coleção polimórfica
+        List<Npc> npcs = List.of(ze, vega);
+        Dialogo dialogo = new Dialogo(jogador, tela);
+
+        tela.titulo("NPCs em " + sala.getNome());
+        tela.mostrarMensagem("NPCs aqui: " + npcs);
+
+        //Mesma chamada (interagir) pra todos: o Informante só fala, o Curandeiro cura
+        tela.titulo("NPCs: conversa com a vida cheia (a cura não é gasta)");
+        dialogo.conversarComTodos(npcs);
+
+        tela.titulo("NPCs: conversa depois de ser ferido");
+        jogador.tomarDano(60);
+        tela.mostrarJogador(jogador);
+        dialogo.conversarComTodos(npcs);
+        tela.mostrarJogador(jogador);
+
+        tela.titulo("NPCs: sem curas restantes");
+        jogador.tomarDano(30);
+        dialogo.conversar(vega);
+
+        tela.titulo("NPCs: invulneráveis");
+        ze.tomarDano(999);
+        tela.mostrarMensagem(ze.getNome() + " tomou 999 de dano e " + (ze.estaMorto() ? "morreu" : "continua de pé"));
     }
 
     private static void demonstrarSistemaDeArmadilhas() {
