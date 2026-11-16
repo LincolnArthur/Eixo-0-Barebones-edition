@@ -27,8 +27,10 @@ import com.jogo.excecoes.SalaNaoEncontradaException;
 import com.jogo.habilidades.Apara;
 import com.jogo.habilidades.BolaDeFogo;
 import com.jogo.habilidades.GolpeDeEnergia;
+import com.jogo.habilidades.SandevistanMichyle;
 import com.jogo.inventario.Categoria;
 import com.jogo.inventario.ModuloCura;
+import com.jogo.inventario.ModuloEnergia;
 import com.jogo.mundo.Mapa;
 import com.jogo.mundo.Sala;
 import com.jogo.personagens.Inimigo;
@@ -43,6 +45,7 @@ import com.jogo.personagens.Voador;
 import com.jogo.visao.TelaConsole;
 
 import java.util.List;
+import java.util.Random;
 
 //Ponto de entrada. No MVC, o main só MONTA as peças: cria o modelo
 //(personagens, armas, mapa), a visão (TelaConsole) e o controle
@@ -141,6 +144,9 @@ public class Jogo {
         tela.mostrarPersonagens(inimigos);
         tela.mostrarMensagem(batalha.jogadorVenceu() ? "Vitória!" : "Ainda há inimigos de pé.");
 
+        //=== Sandevistan (câmera lenta) e Cyberpsicose ===
+        demonstrarSandevistan(tela);
+
         //=== NPCs amigáveis da sala (Npc, NpcInformante, NpcCurandeiro e o controle Dialogo) ===
         demonstrarNpcs(tela, jogador, laboratorio);
 
@@ -148,6 +154,32 @@ public class Jogo {
         // DEMONSTRAÇÃO: SISTEMA MODULAR DE ARMADILHAS (POO / SOLID / DESIGN PATTERNS)
         // =========================================================================
         demonstrarSistemaDeArmadilhas();
+    }
+
+    //Sandevistan: liga, os inimigos agem 1 turno a cada 4 (tempo a 25%),
+    //a energia acaba e ela desliga sozinha. A semente 4102 faz o sorteio
+    //de 25% cair na Cyberpsicose, pra mostrar o efeito sempre
+    private static void demonstrarSandevistan(TelaConsole tela) {
+        Jogador jogador = new Jogador("Michyle", 100,
+                new Espada("espada", "Espada Longa", "", 10, 0.0), 50);
+        jogador.coletarItem(new ModuloEnergia("modulo_energia", "Módulo de Energia",
+                "Recupera 40 de energia", Categoria.CONSUMIVEL, 40));
+        List<Inimigo> inimigos = List.of(new Melee("Robô", 200, 8, 0.0));
+        Batalha batalha = new Batalha(jogador, inimigos, tela);
+        SandevistanMichyle sandevistan = new SandevistanMichyle(true, new Random(4102));
+
+        tela.titulo("Sandevistan");
+        batalha.alternarSandevistan(sandevistan);
+        for (int turno = 1; turno <= 3; turno++) {
+            batalha.jogadorAtaca(inimigos.get(0));
+            batalha.turnoDosInimigos();
+            tela.mostrarMensagem("  energia: " + jogador.getEnergiaAtual() + "/" + jogador.getEnergiaMaxima());
+        }
+        batalha.alternarSandevistan(sandevistan); //em cooldown: não liga
+        batalha.usarItem("modulo_energia");       //energia volta a 50%: a Cyberpsicose acaba
+        batalha.turnoDosInimigos();               //tempo normal de novo
+        tela.mostrarJogador(jogador);
+        tela.mostrarMensagem("Cyberpsicose ativa? " + (sandevistan.getCyberpsicose().estaAtivo() ? "sim" : "não"));
     }
 
     //NPCs amigáveis: mesma divisão do resto do main (monta as peças). Quem

@@ -4,73 +4,61 @@ import com.jogo.personagens.Jogador;
 import com.jogo.personagens.Personagem;
 
 /**
- * Debuff Cyberpsicose: chance de 25% ao ativar SandevistanMichyle.
- * - Dano contínuo até a vida chegar a 50% da vida atual no momento da ativação
- * - Dura até a energia zerar E recuperar 50% da energia máxima 
- * -Raioni
+ * Debuff Cyberpsicose: chance de 25% ao ligar o SandevistanMichyle. -Raioni
+ * - Dano contínuo (8 por segundo) até a vida chegar a 50% da vida que o
+ *   jogador tinha quando o efeito começou (nunca mata)
+ * - Dura até o Sandevistan acabar E a energia voltar a 50% da máxima.
+ *   Continua com o Sandevistan desligado: é o "preço" do implante.
+ * Mesmas regras da versão FXGL.
  */
 public class Cyberpsicose implements Efeito {
-    private static final double DANO_POR_SEGUNDO = 8.0; // dano contínuo por segundo
+    public static final double DANO_POR_SEGUNDO = 8.0;
 
     private boolean ativo = false;
-    private double vidaLimite; // 50% da vida atual no momento da ativação
+    private int vidaLimite; // 50% da vida ATUAL no momento da ativação
     private double timerDano = 0;
-    private boolean energiaZerou = false;
+    private boolean sandevistanAcabou = false;
 
     @Override
     public void aplicar(Personagem alvo) {
-        if (!(alvo instanceof Jogador jogador)) {
-            return; // Cyberpsicose só afeta o jogador
-        }
-        if (ativo) {
-            return; // já aplicado
+        if (!(alvo instanceof Jogador jogador) || ativo) {
+            return; // só afeta o jogador, e não acumula
         }
         ativo = true;
-        vidaLimite = jogador.getVidaAtual() * 0.5; // 50% da vida ATUAL
-        energiaZerou = false;
+        vidaLimite = (int) Math.ceil(jogador.getVidaAtual() * 0.5);
+        timerDano = 0;
+        sandevistanAcabou = false;
     }
 
     @Override
     public void remover(Personagem alvo) {
-        if (!(alvo instanceof Jogador jogador)) {
-            return;
-        }
-
-        if (!ativo) {
-            return;
-        }
-
         ativo = false;
     }
 
+    // Avisado pelo SandevistanMichyle quando ele desliga
+    public void marcarFimDoSandevistan() {
+        sandevistanAcabou = true;
+    }
+
     @Override
-    public boolean atualizar(Personagem alvo, double tpf) {
+    public boolean atualizar(Personagem alvo, double dt) {
         if (!ativo || !(alvo instanceof Jogador jogador)) {
             return false;
         }
-
-        // Verifica se energia zerou
-        if (jogador.getEnergiaAtual() <= 0) {
-            energiaZerou = true;
+        // Terminou: Sandevistan já acabou e a energia voltou a 50%
+        if (sandevistanAcabou && jogador.getEnergiaAtual() >= jogador.getEnergiaMaxima() * 0.5) {
+            return false;
         }
-
-        // Se energia zerou E recuperou 50% da energia máxima, remove o efeito
-        if (energiaZerou && jogador.getEnergiaAtual() >= jogador.getEnergiaMaxima() * 0.5) {
-            return false; // sinaliza para remover
-        }
-
-        // Aplica dano contínuo até chegar no limite (50% da vida original)
         if (jogador.getVidaAtual() > vidaLimite) {
-            timerDano += tpf;
-            if (timerDano >= 1.0) { // a cada 1 segundo
+            timerDano += dt;
+            if (timerDano >= 1.0) {
                 int dano = (int) Math.ceil(DANO_POR_SEGUNDO * timerDano);
-                // Math.ceil arredonda pra cima o double para um valor inteiro do tipo double 
-                // Usa tomarDano direto (ignora invencibilidade, é dano do debuff)
-                jogador.tomarDano(dano);
+                timerDano = 0; // antes não zerava: o dano crescia a cada atualização
+                // não passa do limite de 50%
+                jogador.tomarDano(Math.min(dano, jogador.getVidaAtual() - vidaLimite));
             }
         }
-
-        return true; // continua ativo
+        return true;
     }
 
     @Override
@@ -83,9 +71,6 @@ public class Cyberpsicose implements Efeito {
         return "Cyberpsicose";
     }
 
-    /**
-     * Verifica se o jogador está com vida no limite crítico (50%).
-     */
     public boolean estaNoLimiteVida(Jogador jogador) {
         return jogador.getVidaAtual() <= vidaLimite;
     }

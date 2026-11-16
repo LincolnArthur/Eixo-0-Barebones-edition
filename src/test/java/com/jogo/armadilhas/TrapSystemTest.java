@@ -3,6 +3,9 @@ package com.jogo.armadilhas;
 import com.jogo.mundo.Sala;
 import com.jogo.personagens.Personagem;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +15,7 @@ import java.util.Objects;
  * Testes unitários independentes do Sistema Modular de Armadilhas (Trap System)
  * para o repositório Eixo-0-Barebones-edition.
  *
- * 100% Java puro (sem dependências externas de engine ou frameworks), validando:
+ * Roda no JUnit 5 junto com os outros testes (mvn test) e também pelo main abaixo. Valida:
  * - Pilares de POO (Polimorfismo, Encapsulamento, Herança, Abstração, SOLID)
  * - Ciclo de vida completo (INACTIVE -> TELEGRAPHING -> ACTIVE -> COOLDOWN -> INACTIVE)
  * - SpikesRetrateis com gatilho de proximidade e 2.0s de telegraphing
@@ -83,10 +86,12 @@ public class TrapSystemTest {
 
     private TestDummyTarget player;
 
+    @BeforeEach
     public void setUp() {
         player = new TestDummyTarget(100, 100, 32, 48);
     }
 
+    @Test
     public void testHitboxOffsetsAndIntersection() {
         Hitbox hitbox = new Hitbox(5, 5, 40, 40);
 
@@ -103,6 +108,7 @@ public class TrapSystemTest {
         assertFalse(touchesRealHitbox, "Hitbox com offset deve perdoar toque de raspão na borda visual!");
     }
 
+    @Test
     public void testSpikesRetrateisLifecycle() {
         SpikesRetrateis spikes = new SpikesRetrateis(100, 100, 64, 32);
 
@@ -139,6 +145,7 @@ public class TrapSystemTest {
         assertEquals(0.0, spikes.getSpikeExtensionRatio(), 0.001);
     }
 
+    @Test
     public void testSpikesDamageOnlyWhenActive() {
         SpikesRetrateis spikes = new SpikesRetrateis(100, 100, 64, 32);
         player.setX(110);
@@ -156,6 +163,7 @@ public class TrapSystemTest {
         assertTrue(player.getLastKnockbackY() < 0, "Knockback vertical deve lançar para cima");
     }
 
+    @Test
     public void testFallingBlockTriggerAndOmnidirectionalDamage() {
         BlocoQueCai block = new BlocoQueCai(200, 50, 64, 64, 300, 0.5, 45);
 
@@ -205,6 +213,7 @@ public class TrapSystemTest {
         assertTrue(dummyTop.getLastKnockbackY() < 0, "Deve lançar para cima");
     }
 
+    @Test
     public void testTrapFactory() {
         Trap spikes = TrapFactory.createSpikes(10, 20, 64, 32);
         assertTrue(spikes instanceof SpikesRetrateis, "Deve instanciar SpikesRetrateis");
@@ -217,6 +226,7 @@ public class TrapSystemTest {
         assertEquals(40, fromMap.getDamage());
     }
 
+    @Test
     public void testProceduralTrapGeneratorAnchoringAndFairPlay() {
         List<TrapProceduralGenerator.PlatformBounds> platforms = List.of(
                 new TrapProceduralGenerator.PlatformBounds(0, 0, 3000, 40),      // Teto físico superior (y=0..40)
@@ -281,6 +291,7 @@ public class TrapSystemTest {
         assertTrue(hasFallingBlock, "Deve gerar BlocoQueCai");
     }
 
+    @Test
     public void testInvulnerabilityAndSalaIntegration() {
         Sala sala = new Sala("sala_01", "Corredor de Testes", "Sala barebones integrada com armadilhas");
         Personagem heroi = new Personagem("Arthur", 100, 200, 120);

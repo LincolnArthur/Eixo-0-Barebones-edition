@@ -3,6 +3,7 @@ package com.jogo.controle;
 import com.jogo.combate.RifleSniper;
 import com.jogo.excecoes.JogoException;
 import com.jogo.habilidades.Habilidade;
+import com.jogo.habilidades.SandevistanMichyle;
 import com.jogo.personagens.Inimigo;
 import com.jogo.personagens.Jogador;
 import com.jogo.visao.TelaConsole;
@@ -21,6 +22,11 @@ public class Batalha {
     //(Melee, Sniper, Voador): coleção polimórfica
     private final List<Inimigo> inimigos;
     private final TelaConsole tela;
+    //Sandevistan ligado: os inimigos ficam em câmera lenta. No console,
+    //tempo a 25% = os inimigos só agem 1 turno a cada 4
+    private SandevistanMichyle sandevistan;
+    private int turnosEmCameraLenta = 0;
+    private static final double SEGUNDOS_POR_TURNO = 1.0;
 
     public Batalha(Jogador jogador, List<? extends Inimigo> inimigos, TelaConsole tela) {
         this.jogador = jogador;
@@ -44,6 +50,15 @@ public class Batalha {
     //Todos os inimigos vivos atacam o jogador. Mesma chamada
     //(iniciarAtaque) pra todos; o dano depende da arma de cada um
     public void turnoDosInimigos() {
+        if (sandevistanLigado()) {
+            turnosEmCameraLenta++;
+            int turnosPorAcao = (int) Math.round(1 / SandevistanMichyle.ESCALA_TEMPO);
+            if (turnosEmCameraLenta % turnosPorAcao != 0) {
+                tela.mostrarMensagem("Câmera lenta: os inimigos quase não se mexem.");
+                passarTempo();
+                return;
+            }
+        }
         for (Inimigo inimigo : inimigos) {
             if (inimigo.estaMorto() || jogador.estaMorto()) {
                 continue;
@@ -51,6 +66,50 @@ public class Batalha {
             int vidaAntes = jogador.getVidaAtual();
             inimigo.iniciarAtaque(jogador);
             tela.mostrarAtaque(inimigo.getNome(), jogador, vidaAntes - jogador.getVidaAtual());
+        }
+        passarTempo();
+    }
+
+    //Liga ou desliga a Sandevistan (a mesma ação faz as duas coisas)
+    public boolean alternarSandevistan(SandevistanMichyle habilidade) {
+        boolean estavaLigada = habilidade.estaAtivo();
+        if (!habilidade.usar(jogador, null)) {
+            tela.mostrarErro("Sandevistan indisponível (sem energia ou em cooldown: "
+                    + Math.round(habilidade.getCooldownRestante()) + "s)");
+            return false;
+        }
+        sandevistan = habilidade;
+        if (estavaLigada) {
+            tela.mostrarMensagem("Sandevistan DESLIGADA. Cooldown de "
+                    + Math.round(SandevistanMichyle.COOLDOWN_POS_DESATIVAR) + "s.");
+        } else {
+            turnosEmCameraLenta = 0;
+            tela.mostrarMensagem("Sandevistan LIGADA: o tempo dos inimigos cai para 25%.");
+            if (habilidade.getCyberpsicose().estaAtivo()) {
+                tela.mostrarErro("CYBERPSICOSE! A vida vai caindo até a metade.");
+            }
+        }
+        return true;
+    }
+
+    public boolean sandevistanLigado() {
+        return sandevistan != null && sandevistan.estaAtivo();
+    }
+
+    //Cada turno conta como 1 segundo pra Sandevistan e pra Cyberpsicose
+    private void passarTempo() {
+        if (sandevistan == null) {
+            return;
+        }
+        boolean estavaLigada = sandevistan.estaAtivo();
+        int vidaAntes = jogador.getVidaAtual();
+        sandevistan.atualizarSandevistan(jogador, SEGUNDOS_POR_TURNO);
+        int danoDebuff = vidaAntes - jogador.getVidaAtual();
+        if (danoDebuff > 0) {
+            tela.mostrarMensagem("Cyberpsicose: " + jogador.getNome() + " perdeu " + danoDebuff + " de vida.");
+        }
+        if (estavaLigada && !sandevistan.estaAtivo()) {
+            tela.mostrarErro("Energia esgotada: a Sandevistan desligou sozinha.");
         }
     }
 

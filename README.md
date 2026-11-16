@@ -27,14 +27,15 @@ java -jar target/Eixo0-Barebones.jar
 
 | Camada | Pacote | Classes |
 |---|---|---|
-| Modelo | `personagens` | `Personagem`, `Jogador`, `Inimigo` (abstrata), `Melee`, `Sniper`, `Voador`, `Nivel` |
+| Modelo | `personagens` | `Personagem`, `Jogador`, `Inimigo` (abstrata), `Melee`, `Sniper`, `Voador`, `Nivel`, `Npc` (abstrata), `NpcInformante`, `NpcCurandeiro` |
 | Modelo | `combate` | `Arma` (abstrata), `Espada`, `Marreta`, `AdagaDupla`, `Sabre`, `ArmaDeFogo`, `Shotgun`, `PistolaDuplaDePlasma`, `RifleSniper`, `Ataque`, `Projetil`, interfaces `Atacante`, `Atacavel`, `ConcedeExperiencia`, `Perfurante` |
-| Modelo | `habilidades` | `Habilidade` (abstrata), `GolpeDeEnergia` (abstrata), `BolaDeFogo`, `Apara`, `Dash`, `PuloDuplo` |
+| Modelo | `habilidades` | `Habilidade` (abstrata), `GolpeDeEnergia` (abstrata), `BolaDeFogo`, `Apara`, `Dash`, `PuloDuplo`, `SandevistanMichyle`, `Cyberpsicose` (interface `Efeito`) |
 | Modelo | `inventario` | `Inventario`, `Item` (abstrata), `ModuloCura`, `ModuloEnergia`, `Categoria`, interfaces `Inventariavel`, `Consumivel` |
 | Modelo | `mundo` | `Mapa`, `Sala` |
+| Modelo | `armadilhas` | `Trap` (abstrata), `SpikesRetrateis`, `BlocoQueCai`, `TrapFactory`, `TrapProceduralGenerator`, `Hitbox`, interfaces `DamageTarget`, `DamageSource`, `TrapListener` |
 | Modelo | `excecoes` | `JogoException`, `ItemNaoEncontradoException`, `ItemIncompativelException`, `SalaNaoEncontradaException` |
 | Visão | `visao` | `TelaConsole`: tudo que é impresso (personagens, barra de vida, ataques, erros) |
-| Controle | `controle` | `Batalha`: turnos, XP de quem morre, e trata as exceções do modelo |
+| Controle | `controle` | `Batalha`: turnos, XP de quem morre, Sandevistan, e trata as exceções do modelo; `Dialogo`: conversa com os NPCs |
 
 `Jogo` (o `main`) só monta as peças e roda a demonstração. Nenhuma classe do modelo imprime nada: quem mostra é a `TelaConsole`.
 
@@ -50,13 +51,17 @@ A `Batalha` captura `JogoException` e mostra `[!] mensagem` na tela, e a demonst
 
 # Testes
 
-82 testes JUnit 5, todos passando, com 93% de cobertura de linhas e 90% de ramos (JaCoCo):
+100 testes JUnit 5, todos passando (a cobertura do JaCoCo foi medida antes das armadilhas, NPCs e Sandevistan: 93% de linhas):
 
-- Unitários, um por classe do modelo, com casos de sucesso e de falha (`PersonagemTest`, `JogadorTest`, `InimigoTest`, `NivelTest`, `ArmaTest`, `ArmasEspeciaisTest`, `AtaqueTest`, `ProjetilTest`, `HabilidadeTest`, `InventarioTest`, `ItemTest`, `MapaSalaTest`, `TelaConsoleTest`).
+- Unitários, um por classe do modelo, com casos de sucesso e de falha (`PersonagemTest`, `JogadorTest`, `InimigoTest`, `NivelTest`, `ArmaTest`, `ArmasEspeciaisTest`, `AtaqueTest`, `ProjetilTest`, `HabilidadeTest`, `InventarioTest`, `ItemTest`, `MapaSalaTest`, `TelaConsoleTest`, `SandevistanTest`, `NpcTest`, `TrapSystemTest`).
 - Exceções: `assertThrows` pra cada exceção própria e pras validações dos construtores.
 - Integração: `BatalhaIntegracaoTest` (jogador, inimigos, armas, habilidades, inventário e tela juntos) e `JogoIntegracaoTest` (roda o `main` inteiro e confere a saída).
 
 # Mudanças recentes
+
+- Sandevistan no console: ligada, os inimigos só agem 1 turno a cada 4 (tempo a 25%); cada turno conta 1 s de energia (20/s) e de Cyberpsicose. Desliga sozinha sem energia e fica 30 s em recarga.
+- NPCs amigáveis (`Npc`, `NpcInformante`, `NpcCurandeiro`) e o controle `Dialogo`.
+- Armadilhas (`armadilhas`), com os testes rodando no JUnit.
 
 - Separação MVC: a impressão saiu do modelo (`Sala.descrever()` virou `TelaConsole.mostrarSala()`), e a lógica de turno foi pra `Batalha`.
 - Exceções próprias no lugar dos `return false` de `usarItem`/`equiparArma`.
