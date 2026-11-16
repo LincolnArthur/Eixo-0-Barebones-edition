@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">TrapListener.java</span></div><h1>TrapListener.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+/**
+ * Interface ouvinte (Observer pattern) para eventos do ciclo de vida das armadilhas.
+ *
+ * Permite desacoplar a lógica de jogo (física/temporizadores) dos subsistemas
+ * de efeitos sonoros (SFX), partículas, animações visuais e feedback de impacto.
+ */
+public interface TrapListener {
+
+    /**
+     * Disparado sempre que o estado da armadilha for modificado.
+     */
+<span class="fc" id="L14">    default void onStateChanged(Trap trap, TrapState oldState, TrapState newState) {}</span>
+
+    /**
+     * Disparado quando a armadilha inicia a fase de aviso antecipado (telegraphing).
+     *
+     * @param trap Armadilha emissora.
+     * @param duration Segundos até a ativação do dano.
+     */
+<span class="fc" id="L22">    default void onTelegraphStarted(Trap trap, double duration) {}</span>
+
+    /**
+     * Disparado no exato instante em que a armadilha se torna letal.
+     */
+<span class="fc" id="L27">    default void onTriggered(Trap trap) {}</span>
+
+    /**
+     * Disparado quando a armadilha acerta um alvo com sucesso.
+     */
+<span class="nc" id="L32">    default void onDamageDealt(Trap trap, DamageTarget target, int damage) {}</span>
+
+    /**
+     * Disparado quando uma armadilha de impacto (ex: {@link BlocoQueCai}) atinge o chão.
+     */
+<span class="nc" id="L37">    default void onImpact(Trap trap) {}</span>
+
+    /**
+     * Disparado quando a armadilha conclui o ciclo e é restaurada ao estado inicial.
+     */
+<span class="nc" id="L42">    default void onReset(Trap trap) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

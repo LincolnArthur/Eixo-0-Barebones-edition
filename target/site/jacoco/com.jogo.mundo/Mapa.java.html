@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Mapa.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.mundo</a> &gt; <span class="el_source">Mapa.java</span></div><h1>Mapa.java</h1><pre class="source lang-java linenums">package com.jogo.mundo;
+
+import com.jogo.excecoes.SalaNaoEncontradaException;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+// representa o mapa geral, no caso agrupamento de salas
+// guarda o ponto inicial de spawn e centraliza a busca.
+public class Mapa {
+
+    private final String nome;
+    private final Map&lt;String, Sala&gt; salas;
+    //Não podem ser trocados depois
+    
+    private Sala salaInicial;
+
+<span class="fc" id="L19">    public Mapa(String nome) {</span>
+<span class="fc" id="L20">        this.nome = nome;</span>
+<span class="fc" id="L21">        this.salas = new LinkedHashMap&lt;&gt;();</span>
+        //O id é a chave e a sala é o valor
+        //Cada sala é uma consulta direta, como os .json
+<span class="fc" id="L24">    }</span>
+
+    public String getNome() {
+<span class="fc" id="L27">        return nome;</span>
+    }
+
+    // add uma sala ao mapa
+    public boolean adicionarSala(Sala sala) {
+<span class="fc bfc" id="L32" title="All 4 branches covered.">        if (sala == null || salas.containsKey(sala.getId())) {</span>
+<span class="fc" id="L33">            return false;</span>
+        }
+<span class="fc" id="L35">        salas.put(sala.getId(), sala);</span>
+
+        // Se for a primeira sala adicionada, define-a como ponto de partida inicial
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (salaInicial == null) {</span>
+<span class="fc" id="L39">            this.salaInicial = sala;</span>
+        }
+<span class="fc" id="L41">        return true;</span>
+    }
+
+    // define manualmente a sala de início do jogador
+    //Antes só imprimia um aviso no console (o modelo não deve imprimir
+    //nada, isso é papel da visão). Agora avisa quem chamou com exceção
+    public void definirSalaInicial(String idSala) throws SalaNaoEncontradaException {
+<span class="fc" id="L48">        Sala encontrada = salas.get(idSala);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (encontrada == null) {</span>
+<span class="fc" id="L50">            throw new SalaNaoEncontradaException(idSala);</span>
+        }
+<span class="fc" id="L52">        this.salaInicial = encontrada;</span>
+<span class="fc" id="L53">    }</span>
+
+    public Sala getSalaInicial() {
+<span class="fc" id="L56">        return salaInicial;</span>
+    }
+
+    // busca uma sala pelo seu ID
+    public Sala buscarSala(String idSala) {
+<span class="fc" id="L61">        return salas.get(idSala);</span>
+    }
+
+    public int totalSalas() {
+<span class="fc" id="L65">        return salas.size();</span>
+    }
+
+    public Map&lt;String, Sala&gt; getSalas() {
+<span class="fc" id="L69">        return Collections.unmodifiableMap(salas);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

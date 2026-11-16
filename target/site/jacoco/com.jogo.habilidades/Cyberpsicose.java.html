@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cyberpsicose.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.habilidades</a> &gt; <span class="el_source">Cyberpsicose.java</span></div><h1>Cyberpsicose.java</h1><pre class="source lang-java linenums">package com.jogo.habilidades;
+
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Personagem;
+
+/**
+ * Debuff Cyberpsicose: chance de 25% ao ligar o SandevistanMichyle. -Raioni
+ * - Dano contínuo (8 por segundo) até a vida chegar a 50% da vida que o
+ *   jogador tinha quando o efeito começou (nunca mata)
+ * - Dura até o Sandevistan acabar E a energia voltar a 50% da máxima.
+ *   Continua com o Sandevistan desligado: é o &quot;preço&quot; do implante.
+ * Mesmas regras da versão FXGL.
+ */
+<span class="fc" id="L14">public class Cyberpsicose implements Efeito {</span>
+    public static final double DANO_POR_SEGUNDO = 8.0;
+
+<span class="fc" id="L17">    private boolean ativo = false;</span>
+    private int vidaLimite; // 50% da vida ATUAL no momento da ativação
+<span class="fc" id="L19">    private double timerDano = 0;</span>
+<span class="fc" id="L20">    private boolean sandevistanAcabou = false;</span>
+
+    @Override
+    public void aplicar(Personagem alvo) {
+<span class="pc bpc" id="L24" title="2 of 4 branches missed.">        if (!(alvo instanceof Jogador jogador) || ativo) {</span>
+<span class="nc" id="L25">            return; // só afeta o jogador, e não acumula</span>
+        }
+<span class="fc" id="L27">        ativo = true;</span>
+<span class="fc" id="L28">        vidaLimite = (int) Math.ceil(jogador.getVidaAtual() * 0.5);</span>
+<span class="fc" id="L29">        timerDano = 0;</span>
+<span class="fc" id="L30">        sandevistanAcabou = false;</span>
+<span class="fc" id="L31">    }</span>
+
+    @Override
+    public void remover(Personagem alvo) {
+<span class="fc" id="L35">        ativo = false;</span>
+<span class="fc" id="L36">    }</span>
+
+    // Avisado pelo SandevistanMichyle quando ele desliga
+    public void marcarFimDoSandevistan() {
+<span class="fc" id="L40">        sandevistanAcabou = true;</span>
+<span class="fc" id="L41">    }</span>
+
+    @Override
+    public boolean atualizar(Personagem alvo, double dt) {
+<span class="pc bpc" id="L45" title="2 of 4 branches missed.">        if (!ativo || !(alvo instanceof Jogador jogador)) {</span>
+<span class="nc" id="L46">            return false;</span>
+        }
+        // Terminou: Sandevistan já acabou e a energia voltou a 50%
+<span class="fc bfc" id="L49" title="All 4 branches covered.">        if (sandevistanAcabou &amp;&amp; jogador.getEnergiaAtual() &gt;= jogador.getEnergiaMaxima() * 0.5) {</span>
+<span class="fc" id="L50">            return false;</span>
+        }
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (jogador.getVidaAtual() &gt; vidaLimite) {</span>
+<span class="fc" id="L53">            timerDano += dt;</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            if (timerDano &gt;= 1.0) {</span>
+<span class="fc" id="L55">                int dano = (int) Math.ceil(DANO_POR_SEGUNDO * timerDano);</span>
+<span class="fc" id="L56">                timerDano = 0; // antes não zerava: o dano crescia a cada atualização</span>
+                // não passa do limite de 50%
+<span class="fc" id="L58">                jogador.tomarDano(Math.min(dano, jogador.getVidaAtual() - vidaLimite));</span>
+            }
+        }
+<span class="fc" id="L61">        return true;</span>
+    }
+
+    @Override
+    public boolean estaAtivo() {
+<span class="fc" id="L66">        return ativo;</span>
+    }
+
+    @Override
+    public String getNome() {
+<span class="nc" id="L71">        return &quot;Cyberpsicose&quot;;</span>
+    }
+
+    public boolean estaNoLimiteVida(Jogador jogador) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        return jogador.getVidaAtual() &lt;= vidaLimite;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TelaConsole.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.visao</a> &gt; <span class="el_source">TelaConsole.java</span></div><h1>TelaConsole.java</h1><pre class="source lang-java linenums">package com.jogo.visao;
+
+import com.jogo.inventario.Inventariavel;
+import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Npc;
+import com.jogo.personagens.Personagem;
+import com.jogo.mundo.Sala;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.List;
+import java.util.Map;
+
+//VISÃO do MVC: o único lugar do projeto que escreve no console.
+//O modelo (personagens, combate, inventario, mundo...) só guarda dados
+//e regras; o controle (controle.Batalha) decide o que acontece e manda
+//a visão mostrar. Trocar o console por uma tela gráfica seria trocar só
+//esta classe.
+public class TelaConsole {
+
+    private final PrintStream saida;
+    //Teclado (só quando roda num terminal de verdade): Enter passa as falas.
+    //null = não espera nada (testes, saída redirecionada)
+    private BufferedReader entrada;
+
+    //Padrão: imprime no console de verdade
+    public TelaConsole() {
+<span class="fc" id="L32">        this(System.out);</span>
+<span class="fc" id="L33">    }</span>
+
+    //Sobrecarga: os testes passam um PrintStream próprio pra conferir o
+    //que foi impresso
+<span class="fc" id="L37">    public TelaConsole(PrintStream saida) {</span>
+<span class="fc" id="L38">        this.saida = saida;</span>
+<span class="fc" id="L39">    }</span>
+
+    //Sobrecarga com teclado: esperarEnter() passa a esperar o Enter
+<span class="nc" id="L42">    public TelaConsole(PrintStream saida, InputStream teclado) {</span>
+<span class="nc" id="L43">        this.saida = saida;</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        this.entrada = teclado == null ? null : new BufferedReader(new InputStreamReader(teclado));</span>
+<span class="nc" id="L45">    }</span>
+
+    //Tela do main: espera o Enter só se estiver num terminal (no teste e
+    //com a saída redirecionada não tem console, então não trava)
+    public static TelaConsole doTerminal() {
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        return System.console() != null ? new TelaConsole(System.out, System.in) : new TelaConsole();</span>
+    }
+
+    //Enter passa a fala (igual ao Enter dos NPCs no FXGL)
+    public void esperarEnter() {
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (entrada == null) {</span>
+<span class="fc" id="L56">            return;</span>
+        }
+<span class="nc" id="L58">        saida.print(&quot;   [Enter]&quot;);</span>
+<span class="nc" id="L59">        saida.flush();</span>
+        try {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (entrada.readLine() == null) {</span>
+<span class="nc" id="L62">                entrada = null; //fim da entrada: para de esperar</span>
+            }
+<span class="nc" id="L64">        } catch (IOException e) {</span>
+<span class="nc" id="L65">            entrada = null;</span>
+<span class="nc" id="L66">        }</span>
+<span class="nc" id="L67">    }</span>
+
+    public void titulo(String texto) {
+<span class="fc" id="L70">        saida.println();</span>
+<span class="fc" id="L71">        saida.println(&quot;===== &quot; + texto.toUpperCase() + &quot; =====&quot;);</span>
+<span class="fc" id="L72">    }</span>
+
+    public void mostrarMensagem(String texto) {
+<span class="fc" id="L75">        saida.println(texto);</span>
+<span class="fc" id="L76">    }</span>
+
+    public void mostrarErro(String texto) {
+<span class="fc" id="L79">        saida.println(&quot;[!] &quot; + texto);</span>
+<span class="fc" id="L80">    }</span>
+
+    //List&lt;? extends Personagem&gt;: aceita List&lt;Inimigo&gt;, List&lt;Jogador&gt;...
+    //qualquer lista de subclasses de Personagem (generics com curinga)
+    public void mostrarPersonagens(List&lt;? extends Personagem&gt; personagens) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (Personagem p : personagens) {</span>
+<span class="fc" id="L86">            mostrarPersonagem(p);</span>
+<span class="fc" id="L87">        }</span>
+<span class="fc" id="L88">    }</span>
+
+    public void mostrarPersonagem(Personagem p) {
+<span class="fc" id="L91">        saida.println(p.getNome() + &quot; &quot; + barraDeVida(p) + &quot; &quot; + p.getVidaAtual() + &quot;/&quot; + p.getVidaMaxima()</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                + (p.estaMorto() ? &quot; (derrotado)&quot; : &quot;&quot;));</span>
+<span class="fc" id="L93">    }</span>
+
+    public void mostrarJogador(Jogador jogador) {
+<span class="fc" id="L96">        mostrarPersonagem(jogador);</span>
+<span class="fc" id="L97">        saida.println(&quot;  Energia: &quot; + jogador.getEnergiaAtual() + &quot;/&quot; + jogador.getEnergiaMaxima()</span>
+<span class="fc" id="L98">                + &quot; | Nível &quot; + jogador.getNivel().getNivelAtual()</span>
+<span class="fc" id="L99">                + &quot; (XP &quot; + jogador.getNivel().getExperienciaAtual()</span>
+<span class="fc" id="L100">                + &quot;/&quot; + jogador.getNivel().getExperienciaParaProximoNivel() + &quot;)&quot;</span>
+<span class="fc" id="L101">                + &quot; | Arma: &quot; + jogador.getArma().getNome());</span>
+<span class="fc" id="L102">    }</span>
+
+    public void mostrarAtaque(String atacante, Personagem alvo, int dano) {
+<span class="fc" id="L105">        saida.println(atacante + &quot; acerta &quot; + alvo.getNome() + &quot; (-&quot; + dano + &quot;)&quot;</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                + (alvo.estaMorto() ? &quot; e derrota!&quot; : &quot;&quot;));</span>
+<span class="fc" id="L107">    }</span>
+
+    public void mostrarRecompensa(Inimigo inimigo, int xp) {
+<span class="fc" id="L110">        saida.println(inimigo.getNome() + &quot; vale &quot; + xp + &quot; de XP&quot;);</span>
+<span class="fc" id="L111">    }</span>
+
+    public void mostrarSubidaDeNivel(Jogador jogador, int nivelAntes) {
+<span class="fc" id="L114">        int nivel = jogador.getNivel().getNivelAtual();</span>
+<span class="fc" id="L115">        StringBuilder linha = new StringBuilder(jogador.getNome() + &quot; subiu para o nível &quot; + nivel</span>
+<span class="fc" id="L116">                + &quot;! Vida máxima &quot; + jogador.getVidaMaxima() + &quot; (vida cheia).&quot;);</span>
+<span class="pc bpc" id="L117" title="1 of 4 branches missed.">        if (nivelAntes &lt; Jogador.NIVEL_GELO &amp;&amp; nivel &gt;= Jogador.NIVEL_GELO) {</span>
+<span class="fc" id="L118">            linha.append(&quot; Nova magia: Raio de Gelo.&quot;);</span>
+        }
+<span class="fc bfc" id="L120" title="All 4 branches covered.">        if (nivelAntes &lt; Jogador.NIVEL_BURACO_NEGRO &amp;&amp; nivel &gt;= Jogador.NIVEL_BURACO_NEGRO) {</span>
+<span class="fc" id="L121">            linha.append(&quot; Nova magia: Buraco Negro.&quot;);</span>
+        }
+<span class="pc bpc" id="L123" title="2 of 4 branches missed.">        if (nivelAntes &lt; Jogador.NIVEL_RECARGA_AUTOMATICA &amp;&amp; nivel &gt;= Jogador.NIVEL_RECARGA_AUTOMATICA) {</span>
+<span class="nc" id="L124">            linha.append(&quot; A energia agora recarrega sozinha.&quot;);</span>
+        }
+<span class="fc" id="L126">        saida.println(linha);</span>
+<span class="fc" id="L127">    }</span>
+
+    //Era o Sala.descrever(): o modelo não imprime mais nada
+    public void mostrarSala(Sala sala) {
+<span class="fc" id="L131">        saida.println(&quot;========== &quot; + sala.getNome().toUpperCase() + &quot; ==========&quot;);</span>
+<span class="fc" id="L132">        saida.println(sala.getDescricao());</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (sala.isPontoDeSalvamento()) {</span>
+<span class="nc" id="L134">            saida.println(&quot;[*] Ponto de Salvamento/Descanso disponível aqui!&quot;);</span>
+        }
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (!sala.getItens().isEmpty()) {</span>
+<span class="fc" id="L137">            StringBuilder linha = new StringBuilder(&quot;Itens na sala: &quot;);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            for (Inventariavel item : sala.getItens()) {</span>
+<span class="fc" id="L139">                linha.append(&quot;[&quot;).append(item.getNome()).append(&quot;] &quot;);</span>
+<span class="fc" id="L140">            }</span>
+<span class="fc" id="L141">            saida.println(linha.toString().trim());</span>
+        }
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (!sala.getNpcs().isEmpty()) {</span>
+<span class="fc" id="L144">            StringBuilder linha = new StringBuilder(&quot;NPCs: &quot;);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            for (Npc npc : sala.getNpcs()) {</span>
+<span class="fc" id="L146">                linha.append(&quot;[&quot;).append(npc.getNome()).append(&quot;] &quot;);</span>
+<span class="fc" id="L147">            }</span>
+<span class="fc" id="L148">            saida.println(linha.toString().trim());</span>
+        }
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (!sala.getInimigos().isEmpty()) {</span>
+<span class="fc" id="L151">            StringBuilder linha = new StringBuilder(&quot;Inimigos: &quot;);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            for (Inimigo ini : sala.getInimigos()) {</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                linha.append(&quot;[&quot;).append(ini.getNome()).append(ini.estaMorto() ? &quot; (Derrotado)&quot; : &quot; (Vivo)&quot;).append(&quot;] &quot;);</span>
+<span class="fc" id="L154">            }</span>
+<span class="fc" id="L155">            saida.println(linha.toString().trim());</span>
+        }
+<span class="fc" id="L157">        StringBuilder linha = new StringBuilder(&quot;Saídas: &quot;);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        for (Map.Entry&lt;String, Sala&gt; s : sala.getSaidas().entrySet()) {</span>
+<span class="fc" id="L159">            linha.append(&quot;[&quot;).append(s.getKey()).append(&quot; -&gt; &quot;).append(s.getValue().getNome()).append(&quot;] &quot;);</span>
+<span class="fc" id="L160">        }</span>
+<span class="fc" id="L161">        saida.println(linha.toString().trim());</span>
+<span class="fc" id="L162">    }</span>
+
+    //[#####-----] com 10 casas, proporcional à vida
+    private String barraDeVida(Personagem p) {
+<span class="fc" id="L166">        int cheias = (int) Math.round(10.0 * p.getVidaAtual() / p.getVidaMaxima());</span>
+<span class="fc" id="L167">        return &quot;[&quot; + &quot;#&quot;.repeat(cheias) + &quot;-&quot;.repeat(10 - cheias) + &quot;]&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpikesRetrateis.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">SpikesRetrateis.java</span></div><h1>SpikesRetrateis.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Polygon;
+
+/**
+ * Armadilha de Espinhos Retráteis de chão.
+ *
+ * Comportamento baseado em Proximidade (sem ciclo automático infinito):
+ * 1. INACTIVE     -&gt; Permanece oculta/recolhida no chão aguardando o jogador pisar na superfície (triggerBox).
+ * 2. TELEGRAPHING -&gt; Ao detectar o jogador em cima, vibra e emite aviso durante 2.0 segundos.
+ * 3. ACTIVE       -&gt; Lança as pontas afiadas causando dano letal e knockback a quem estiver em contato.
+ * 4. COOLDOWN     -&gt; Recolhe as lâminas para o solo e desarma temporariamente.
+ * 5. INACTIVE     -&gt; Rearma e fica pronta para um novo acionamento por aproximação.
+ */
+public class SpikesRetrateis extends Trap {
+
+<span class="fc" id="L19">    private int numberOfSpikes = 4;</span>
+<span class="fc" id="L20">    private double spikeExtensionRatio = 0.0; // 0.0 (recolhido) a 1.0 (totalmente erguido)</span>
+<span class="fc" id="L21">    private boolean cyclic = false; // Desabilitado por padrão: ativação puramente por proximidade</span>
+
+    public SpikesRetrateis(double x, double y, double width, double height) {
+<span class="fc" id="L24">        this(x, y, width, height, -1.0, 2.0, 2.0, 1.5, 25);</span>
+<span class="fc" id="L25">    }</span>
+
+    public SpikesRetrateis(double x, double y, double width, double height,
+                           double inactiveDuration, double telegraphDuration,
+                           double activeDuration, double cooldownDuration, int damage) {
+<span class="fc" id="L30">        super(&quot;Espinhos Retráteis&quot;, x, y, width, height);</span>
+<span class="fc" id="L31">        this.inactiveDuration = inactiveDuration;</span>
+<span class="fc" id="L32">        this.telegraphDuration = Math.max(2.0, telegraphDuration);</span>
+<span class="fc" id="L33">        this.activeDuration = activeDuration;</span>
+<span class="fc" id="L34">        this.cooldownDuration = cooldownDuration;</span>
+<span class="fc" id="L35">        this.damage = damage;</span>
+<span class="fc" id="L36">        this.knockbackForce = 320.0;</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        this.cyclic = inactiveDuration &gt; 0;</span>
+
+<span class="fc" id="L39">        double horizontalMargin = 4.0;</span>
+<span class="fc" id="L40">        double basePlateHeight = height * 0.25;</span>
+<span class="fc" id="L41">        this.damageHitbox = new Hitbox(</span>
+                horizontalMargin,
+                0,
+<span class="fc" id="L44">                Math.max(4.0, width - (horizontalMargin * 2)),</span>
+                height - basePlateHeight
+        );
+
+        // TriggerBox de proximidade: exatamente na superfície superior do piso dos espinhos
+<span class="fc" id="L49">        this.triggerBox = new Hitbox(0, -12, width, height + 12);</span>
+<span class="fc" id="L50">    }</span>
+
+    @Override
+    protected void transitionTo(TrapState newState) {
+<span class="fc" id="L54">        super.transitionTo(newState);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (newState == TrapState.TELEGRAPHING) {</span>
+<span class="fc" id="L56">            spikeExtensionRatio = 0.25;</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        } else if (newState == TrapState.ACTIVE) {</span>
+<span class="fc" id="L58">            spikeExtensionRatio = 1.0;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        } else if (newState == TrapState.INACTIVE) {</span>
+<span class="fc" id="L60">            spikeExtensionRatio = 0.0;</span>
+        }
+<span class="fc" id="L62">    }</span>
+
+    @Override
+    protected void updateCustom(double deltaTime) {
+<span class="pc bpc" id="L66" title="1 of 5 branches missed.">        switch (state) {</span>
+<span class="fc" id="L67">            case INACTIVE -&gt; spikeExtensionRatio = 0.0;</span>
+<span class="fc" id="L68">            case TELEGRAPHING -&gt; spikeExtensionRatio = 0.25;</span>
+<span class="fc" id="L69">            case ACTIVE -&gt; spikeExtensionRatio = 1.0;</span>
+            case COOLDOWN -&gt; {
+<span class="fc" id="L71">                double progress = Math.min(1.0, stateTimer / cooldownDuration);</span>
+<span class="fc" id="L72">                spikeExtensionRatio = Math.max(0.0, 1.0 - progress);</span>
+<span class="fc" id="L73">            }</span>
+            default -&gt; {}
+        }
+<span class="fc" id="L76">    }</span>
+
+    @Override
+    protected void updateInactive(double deltaTime) {
+<span class="pc bpc" id="L80" title="3 of 4 branches missed.">        if (cyclic &amp;&amp; inactiveDuration &gt; 0) {</span>
+<span class="nc" id="L81">            super.updateInactive(deltaTime);</span>
+        }
+<span class="fc" id="L83">    }</span>
+
+    @Override
+    protected void renderContent(Graphics g, double drawX, double drawY) {
+<span class="nc" id="L87">        Color prev = g.getColor();</span>
+
+<span class="nc" id="L89">        g.setColor(new Color(60, 60, 65));</span>
+<span class="nc" id="L90">        int baseHeight = Math.max(4, (int) (height * 0.25));</span>
+<span class="nc" id="L91">        g.fillRect((int) drawX, (int) (drawY + height - baseHeight), (int) width, baseHeight);</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (spikeExtensionRatio &gt; 0.05) {</span>
+<span class="nc" id="L94">            double currentSpikeHeight = (height - baseHeight) * spikeExtensionRatio;</span>
+<span class="nc" id="L95">            double spikeWidth = width / numberOfSpikes;</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            Color spikeColor = (state == TrapState.ACTIVE)</span>
+<span class="nc" id="L98">                    ? new Color(220, 40, 40)</span>
+<span class="nc" id="L99">                    : new Color(180, 185, 195);</span>
+
+<span class="nc" id="L101">            g.setColor(spikeColor);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            for (int i = 0; i &lt; numberOfSpikes; i++) {</span>
+<span class="nc" id="L104">                double sx = drawX + (i * spikeWidth);</span>
+<span class="nc" id="L105">                double sy = drawY + height - baseHeight;</span>
+
+<span class="nc" id="L107">                Polygon triangle = new Polygon();</span>
+<span class="nc" id="L108">                triangle.addPoint((int) sx, (int) sy);</span>
+<span class="nc" id="L109">                triangle.addPoint((int) (sx + spikeWidth / 2.0), (int) (sy - currentSpikeHeight));</span>
+<span class="nc" id="L110">                triangle.addPoint((int) (sx + spikeWidth), (int) sy);</span>
+
+<span class="nc" id="L112">                g.fillPolygon(triangle);</span>
+
+<span class="nc" id="L114">                g.setColor(Color.DARK_GRAY);</span>
+<span class="nc" id="L115">                g.drawPolygon(triangle);</span>
+<span class="nc" id="L116">                g.setColor(spikeColor);</span>
+            }
+        }
+
+<span class="nc" id="L120">        g.setColor(prev);</span>
+<span class="nc" id="L121">    }</span>
+
+    public int getNumberOfSpikes() {
+<span class="nc" id="L124">        return numberOfSpikes;</span>
+    }
+
+    public void setNumberOfSpikes(int numberOfSpikes) {
+<span class="nc" id="L128">        this.numberOfSpikes = Math.max(1, numberOfSpikes);</span>
+<span class="nc" id="L129">    }</span>
+
+    public double getSpikeExtensionRatio() {
+<span class="fc" id="L132">        return spikeExtensionRatio;</span>
+    }
+
+    public boolean isCyclic() {
+<span class="nc" id="L136">        return cyclic;</span>
+    }
+
+    public void setCyclic(boolean cyclic) {
+<span class="nc" id="L140">        this.cyclic = cyclic;</span>
+<span class="nc" id="L141">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

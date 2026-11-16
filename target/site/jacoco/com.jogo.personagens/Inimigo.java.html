@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Inimigo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">Inimigo.java</span></div><h1>Inimigo.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import com.jogo.combate.Arma;
+import com.jogo.combate.Atacante;
+import com.jogo.combate.Ataque;
+import com.jogo.combate.ConcedeExperiencia;
+
+//Classe herda metodos e estados da superclasse
+//Tipo abstrato, por conta do polimorfismo.
+//Cada tipo diferente de inimigo vai atacar de uma forma diferente
+//attack() é abstrato por isso. -lincoln
+//
+//getExperienciaConcedida() (da interface ConcedeExperiencia) não é
+//escrito aqui: cada filha é obrigada a dizer quanto vale. Antes era um
+//campo que nunca recebia valor, então todo inimigo dava 0 de XP.
+public abstract class Inimigo extends Personagem implements Atacante, ConcedeExperiencia {
+
+    private final Arma arma;
+    //Turnos que ainda faltam congelado (Raio de Gelo). Congelado não ataca.
+<span class="fc" id="L20">    private double turnosCongelado = 0;</span>
+
+    public Inimigo(String nome, int vidaMaxima, Arma arma) {
+<span class="fc" id="L23">        super(nome, vidaMaxima);</span>
+<span class="fc" id="L24">        this.arma = arma;</span>
+<span class="fc" id="L25">    }</span>
+
+
+    // Igual pra QUALQUER inimigo: cria o Ataque a partir da própria arma e aplica -lincoln
+    @Override
+    public void iniciarAtaque(Personagem vitima) {
+<span class="fc" id="L31">        Ataque ataque = new Ataque(arma.causarDano(vitima));</span>
+<span class="fc" id="L32">        ataque.aplicarEm(vitima);</span>
+<span class="fc" id="L33">    }</span>
+
+    public Arma getArma() {
+<span class="fc" id="L36">        return arma;</span>
+    }
+
+    //Nome do ataque pra visão mostrar. Padrão: o nome da arma; o Chefe
+    //sobrescreve com o nome do ataque da vez (Rajada, Investida...)
+    public String getNomeAtaque() {
+<span class="nc" id="L42">        return arma.getNome();</span>
+    }
+
+    //O que a visão deve mostrar sobre o último turno deste inimigo. Padrão:
+    //nada (a Batalha mostra só o dano). O Chefe sobrescreve pra contar o
+    //aviso e o ataque da vez
+    public String descreverUltimaAcao() {
+<span class="fc" id="L49">        return &quot;&quot;;</span>
+    }
+
+    //=== Raio de Gelo ===
+
+    public void congelar(double turnos) {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (turnos &lt;= 0) {</span>
+<span class="fc" id="L56">            throw new IllegalArgumentException(&quot;Tempo de congelamento precisa ser positivo&quot;);</span>
+        }
+<span class="fc" id="L58">        turnosCongelado = Math.max(turnosCongelado, turnos);</span>
+<span class="fc" id="L59">    }</span>
+
+    public boolean estaCongelado() {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        return turnosCongelado &gt; 0;</span>
+    }
+
+    //Chamado pelo controle no turno do inimigo: se estava congelado, gasta
+    //um turno do gelo e devolve true (ele perde esse turno)
+    public boolean passarTurnoCongelado() {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (!estaCongelado()) {</span>
+<span class="fc" id="L69">            return false;</span>
+        }
+<span class="fc" id="L71">        turnosCongelado = Math.max(0, turnosCongelado - 1);</span>
+<span class="fc" id="L72">        return true;</span>
+    }
+
+    public double getTurnosCongelado() {
+<span class="fc" id="L76">        return turnosCongelado;</span>
+    }
+
+    //=== Buraco Negro ===
+
+    //Quanto o Buraco Negro tira deste inimigo. Padrão: a vida inteira (morre)
+    public int danoDeBuracoNegro() {
+<span class="fc" id="L83">        return getVidaAtual();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

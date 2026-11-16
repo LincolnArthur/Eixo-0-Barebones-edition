@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapGenerationConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">TrapGenerationConfig.java</span></div><h1>TrapGenerationConfig.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+/**
+ * Parâmetros configuráveis para o sistema de Geração Procedural de Armadilhas.
+ *
+ * Permite ajustar densidade (chance de spawn), limites mínimo/máximo por sala,
+ * raio da Zona Segura (Safe Zone) ao redor do jogador, distância mínima entre
+ * armadilhas (Fair Play) e uma {@code seed} (padrão {@link TrapProceduralGenerator#DEFAULT_SEED})
+ * para layouts determinísticos.
+ */
+public class TrapGenerationConfig {
+
+<span class="pc" id="L13">    private int minTraps = 3;</span>
+<span class="pc" id="L14">    private int maxTraps = 8;</span>
+<span class="pc" id="L15">    private double spawnChance = 0.65;</span>
+<span class="pc" id="L16">    private Long seed = TrapProceduralGenerator.DEFAULT_SEED;</span>
+
+    // Regras de Fair Play
+<span class="pc" id="L19">    private double safeZoneRadius = 550.0;</span>
+<span class="pc" id="L20">    private double minDistanceBetweenTraps = 300.0;</span>
+<span class="pc" id="L21">    private double portalSafeMargin = 200.0;</span>
+
+    // Dimensões padrão e alinhamento (Snap-to-Grid / Surface)
+<span class="pc" id="L24">    private double gridStepX = 64.0;</span>
+<span class="pc" id="L25">    private double platformEdgeMargin = 16.0;</span>
+<span class="pc" id="L26">    private double maxCeilingTopY = 80.0;</span>
+
+<span class="pc" id="L28">    private double spikeWidth = 128.0;</span>
+<span class="pc" id="L29">    private double spikeHeight = 64.0;</span>
+<span class="pc" id="L30">    private double minTopClearance = 96.0;</span>
+
+<span class="pc" id="L32">    private double blockWidth = 64.0;</span>
+<span class="pc" id="L33">    private double blockHeight = 64.0;</span>
+<span class="pc" id="L34">    private double minFallClearance = 250.0;</span>
+
+<span class="fc" id="L36">    public TrapGenerationConfig() {</span>
+<span class="fc" id="L37">    }</span>
+
+<span class="nc" id="L39">    public TrapGenerationConfig(int minTraps, int maxTraps, double spawnChance, Long seed) {</span>
+<span class="nc" id="L40">        setMinTraps(minTraps);</span>
+<span class="nc" id="L41">        setMaxTraps(maxTraps);</span>
+<span class="nc" id="L42">        setSpawnChance(spawnChance);</span>
+<span class="nc" id="L43">        this.seed = seed;</span>
+<span class="nc" id="L44">    }</span>
+
+    public static TrapGenerationConfig padrao() {
+<span class="nc" id="L47">        return new TrapGenerationConfig();</span>
+    }
+
+    public static TrapGenerationConfig comSeed(long seed) {
+<span class="nc" id="L51">        return new TrapGenerationConfig().withSeed(seed);</span>
+    }
+
+    public TrapGenerationConfig withMinTraps(int minTraps) {
+<span class="nc" id="L55">        setMinTraps(minTraps);</span>
+<span class="nc" id="L56">        return this;</span>
+    }
+
+    public TrapGenerationConfig withMaxTraps(int maxTraps) {
+<span class="nc" id="L60">        setMaxTraps(maxTraps);</span>
+<span class="nc" id="L61">        return this;</span>
+    }
+
+    public TrapGenerationConfig withSpawnChance(double spawnChance) {
+<span class="nc" id="L65">        setSpawnChance(spawnChance);</span>
+<span class="nc" id="L66">        return this;</span>
+    }
+
+    public TrapGenerationConfig withSeed(Long seed) {
+<span class="fc" id="L70">        this.seed = seed;</span>
+<span class="fc" id="L71">        return this;</span>
+    }
+
+    public TrapGenerationConfig withRandomSeed() {
+<span class="nc" id="L75">        this.seed = null;</span>
+<span class="nc" id="L76">        return this;</span>
+    }
+
+    public TrapGenerationConfig withSafeZoneRadius(double safeZoneRadius) {
+<span class="nc" id="L80">        setSafeZoneRadius(safeZoneRadius);</span>
+<span class="nc" id="L81">        return this;</span>
+    }
+
+    public TrapGenerationConfig withMinDistanceBetweenTraps(double minDistanceBetweenTraps) {
+<span class="nc" id="L85">        setMinDistanceBetweenTraps(minDistanceBetweenTraps);</span>
+<span class="nc" id="L86">        return this;</span>
+    }
+
+    public TrapGenerationConfig withPortalSafeMargin(double portalSafeMargin) {
+<span class="nc" id="L90">        this.portalSafeMargin = Math.max(0.0, portalSafeMargin);</span>
+<span class="nc" id="L91">        return this;</span>
+    }
+
+    public TrapGenerationConfig withGridStepX(double gridStepX) {
+<span class="nc" id="L95">        this.gridStepX = Math.max(16.0, gridStepX);</span>
+<span class="nc" id="L96">        return this;</span>
+    }
+
+    public TrapGenerationConfig withSpikeDimensions(double width, double height) {
+<span class="nc" id="L100">        this.spikeWidth = Math.max(16.0, width);</span>
+<span class="nc" id="L101">        this.spikeHeight = Math.max(16.0, height);</span>
+<span class="nc" id="L102">        return this;</span>
+    }
+
+    public TrapGenerationConfig withBlockDimensions(double width, double height) {
+<span class="nc" id="L106">        this.blockWidth = Math.max(16.0, width);</span>
+<span class="nc" id="L107">        this.blockHeight = Math.max(16.0, height);</span>
+<span class="nc" id="L108">        return this;</span>
+    }
+
+    public TrapGenerationConfig withMinTopClearance(double minTopClearance) {
+<span class="nc" id="L112">        this.minTopClearance = Math.max(16.0, minTopClearance);</span>
+<span class="nc" id="L113">        return this;</span>
+    }
+
+    public TrapGenerationConfig withMinFallClearance(double minFallClearance) {
+<span class="nc" id="L117">        this.minFallClearance = Math.max(16.0, minFallClearance);</span>
+<span class="nc" id="L118">        return this;</span>
+    }
+
+    public TrapGenerationConfig withMaxCeilingTopY(double maxCeilingTopY) {
+<span class="nc" id="L122">        setMaxCeilingTopY(maxCeilingTopY);</span>
+<span class="nc" id="L123">        return this;</span>
+    }
+
+    public int getMinTraps() {
+<span class="fc" id="L127">        return minTraps;</span>
+    }
+
+    public void setMinTraps(int minTraps) {
+<span class="nc" id="L131">        this.minTraps = Math.max(0, minTraps);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (this.maxTraps &lt; this.minTraps) {</span>
+<span class="nc" id="L133">            this.maxTraps = this.minTraps;</span>
+        }
+<span class="nc" id="L135">    }</span>
+
+    public int getMaxTraps() {
+<span class="fc" id="L138">        return maxTraps;</span>
+    }
+
+    public void setMaxTraps(int maxTraps) {
+<span class="nc" id="L142">        this.maxTraps = Math.max(this.minTraps, maxTraps);</span>
+<span class="nc" id="L143">    }</span>
+
+    public double getSpawnChance() {
+<span class="fc" id="L146">        return spawnChance;</span>
+    }
+
+    public void setSpawnChance(double spawnChance) {
+<span class="nc" id="L150">        this.spawnChance = Math.max(0.0, Math.min(1.0, spawnChance));</span>
+<span class="nc" id="L151">    }</span>
+
+    public Long getSeed() {
+<span class="fc" id="L154">        return seed;</span>
+    }
+
+    public void setSeed(Long seed) {
+<span class="nc" id="L158">        this.seed = seed;</span>
+<span class="nc" id="L159">    }</span>
+
+    public double getSafeZoneRadius() {
+<span class="fc" id="L162">        return safeZoneRadius;</span>
+    }
+
+    public void setSafeZoneRadius(double safeZoneRadius) {
+<span class="nc" id="L166">        this.safeZoneRadius = Math.max(0.0, safeZoneRadius);</span>
+<span class="nc" id="L167">    }</span>
+
+    public double getMinDistanceBetweenTraps() {
+<span class="fc" id="L170">        return minDistanceBetweenTraps;</span>
+    }
+
+    public void setMinDistanceBetweenTraps(double minDistanceBetweenTraps) {
+<span class="nc" id="L174">        this.minDistanceBetweenTraps = Math.max(0.0, minDistanceBetweenTraps);</span>
+<span class="nc" id="L175">    }</span>
+
+    public double getPortalSafeMargin() {
+<span class="fc" id="L178">        return portalSafeMargin;</span>
+    }
+
+    public void setPortalSafeMargin(double portalSafeMargin) {
+<span class="nc" id="L182">        this.portalSafeMargin = Math.max(0.0, portalSafeMargin);</span>
+<span class="nc" id="L183">    }</span>
+
+    public double getGridStepX() {
+<span class="fc" id="L186">        return gridStepX;</span>
+    }
+
+    public void setGridStepX(double gridStepX) {
+<span class="nc" id="L190">        this.gridStepX = Math.max(16.0, gridStepX);</span>
+<span class="nc" id="L191">    }</span>
+
+    public double getPlatformEdgeMargin() {
+<span class="fc" id="L194">        return platformEdgeMargin;</span>
+    }
+
+    public void setPlatformEdgeMargin(double platformEdgeMargin) {
+<span class="nc" id="L198">        this.platformEdgeMargin = Math.max(0.0, platformEdgeMargin);</span>
+<span class="nc" id="L199">    }</span>
+
+    public double getSpikeWidth() {
+<span class="fc" id="L202">        return spikeWidth;</span>
+    }
+
+    public double getSpikeHeight() {
+<span class="fc" id="L206">        return spikeHeight;</span>
+    }
+
+    public double getMinTopClearance() {
+<span class="fc" id="L210">        return minTopClearance;</span>
+    }
+
+    public double getBlockWidth() {
+<span class="fc" id="L214">        return blockWidth;</span>
+    }
+
+    public double getBlockHeight() {
+<span class="fc" id="L218">        return blockHeight;</span>
+    }
+
+    public double getMinFallClearance() {
+<span class="fc" id="L222">        return minFallClearance;</span>
+    }
+
+    public double getMaxCeilingTopY() {
+<span class="fc" id="L226">        return maxCeilingTopY;</span>
+    }
+
+    public void setMaxCeilingTopY(double maxCeilingTopY) {
+<span class="nc" id="L230">        this.maxCeilingTopY = Math.max(0.0, maxCeilingTopY);</span>
+<span class="nc" id="L231">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

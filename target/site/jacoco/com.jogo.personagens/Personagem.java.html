@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Personagem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">Personagem.java</span></div><h1>Personagem.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import com.jogo.armadilhas.DamageSource;
+import com.jogo.armadilhas.DamageTarget;
+import com.jogo.armadilhas.Hitbox;
+import com.jogo.combate.Atacavel;
+
+public class Personagem implements Atacavel, DamageTarget {
+
+    //O estado que cada personagem carrega individualmente
+    private String nome; // private: Ninguém altera fora a classe -lincoln
+    private int vidaAtual;
+    private int vidaMaxima;
+
+    // Posição espacial, hitbox e janela de invulnerabilidade (I-Frames) para interação com armadilhas
+    private double x;
+    private double y;
+    private final Hitbox hitbox;
+<span class="fc" id="L19">    private double invulnerabilityTimer = 0.0;</span>
+<span class="fc" id="L20">    private double ultimoKnockbackX = 0.0;</span>
+<span class="fc" id="L21">    private double ultimoKnockbackY = 0.0;</span>
+
+    //Construtor: Roda quando um new Personagem é criado -lincoln
+    public Personagem(String nome, int vidaMaxima) {
+<span class="fc" id="L25">        this(nome, vidaMaxima, 0.0, 0.0, 32.0, 48.0);</span>
+<span class="fc" id="L26">    }</span>
+
+    public Personagem(String nome, int vidaMaxima, double x, double y) {
+<span class="fc" id="L29">        this(nome, vidaMaxima, x, y, 32.0, 48.0);</span>
+<span class="fc" id="L30">    }</span>
+
+<span class="fc" id="L32">    public Personagem(String nome, int vidaMaxima, double x, double y, double largura, double altura) {</span>
+        //Validação: personagem sem nome ou sem vida é erro de quem
+        //escreveu o código, não algo que acontece jogando. Por isso
+        //IllegalArgumentException (não precisa de try/catch)
+<span class="fc bfc" id="L36" title="All 4 branches covered.">        if (nome == null || nome.isBlank()) {</span>
+<span class="fc" id="L37">            throw new IllegalArgumentException(&quot;Personagem precisa de um nome&quot;);</span>
+        }
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (vidaMaxima &lt;= 0) {</span>
+<span class="fc" id="L40">            throw new IllegalArgumentException(&quot;Vida máxima deve ser maior que zero: &quot; + vidaMaxima);</span>
+        }
+<span class="fc" id="L42">        this.nome = nome; //this: separa o parâmetro do construtor do da classe</span>
+                          //Os dois tem o mesmo nome, então é necessário
+<span class="fc" id="L44">        this.vidaAtual = vidaMaxima; // Cmc com vida cheia -lincoln</span>
+<span class="fc" id="L45">        this.vidaMaxima = vidaMaxima;</span>
+<span class="fc" id="L46">        this.x = x;</span>
+<span class="fc" id="L47">        this.y = y;</span>
+<span class="fc" id="L48">        this.hitbox = new Hitbox(0, 0, largura, altura);</span>
+<span class="fc" id="L49">    }</span>
+
+    //Usa chamando um new
+    //Tipo struct
+    //Personagem Herói = new Personagem(&quot;Herói&quot;, 20)
+
+    //Pega o nome do obj gerado com o new -lincoln
+    public String getNome() {
+<span class="fc" id="L57">        return nome;</span>
+    }
+
+    //Só leitura: a visão (TelaConsole) e os testes precisam ver a vida.
+    //Não tem set: a vida só muda por tomarDano() e curar()
+    public int getVidaAtual() {
+<span class="fc" id="L63">        return vidaAtual;</span>
+    }
+
+    public int getVidaMaxima() {
+<span class="fc" id="L67">        return vidaMaxima;</span>
+    }
+
+    //Comportamentos: Ações que o personagem sabe executar
+
+    @Override
+    public void tomarDano(int quantidade) {
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">        if (quantidade &lt;= 0 || isInvulnerable()) {</span>
+<span class="fc" id="L75">            return;</span>
+        }
+<span class="fc" id="L77">        this.vidaAtual = Math.max(0, this.vidaAtual - quantidade); //Garante que vida n fique negativa -Raioni</span>
+<span class="fc" id="L78">    }</span>
+
+    //Substitui o antigo setVidaAtual: a vida só sobe por aqui, e o
+    //próprio personagem garante as regras (não passa da máxima, não
+    //revive morto). Quem cura (ex: ModuloCura) só diz quanto.
+    public void curar(int quantidade) {
+<span class="fc bfc" id="L84" title="All 4 branches covered.">        if (quantidade &lt;= 0 || estaMorto()) {</span>
+<span class="fc" id="L85">            return;</span>
+        }
+<span class="fc" id="L87">        this.vidaAtual = Math.min(vidaMaxima, this.vidaAtual + quantidade);</span>
+<span class="fc" id="L88">    }</span>
+
+    //Só as filhas (ex.: Jogador ao subir de nível) podem aumentar a vida
+    //máxima; quem está fora da família não mexe
+    protected void aumentarVidaMaxima(int quantidade) {
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (quantidade &gt; 0) {</span>
+<span class="fc" id="L94">            this.vidaMaxima += quantidade;</span>
+        }
+<span class="fc" id="L96">    }</span>
+
+    //Verifica se o character está morto -lincoln
+    @Override
+    public boolean estaMorto() {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        return vidaAtual &lt;= 0;</span>
+    }
+
+    //verifica se o character está com vida cheia -lincoln
+    public boolean estaSaudavel() {
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        return vidaAtual == vidaMaxima;</span>
+    }
+
+    public void atualizar(double deltaTime) {
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        if (deltaTime &gt; 0 &amp;&amp; invulnerabilityTimer &gt; 0) {</span>
+<span class="fc" id="L111">            invulnerabilityTimer = Math.max(0.0, invulnerabilityTimer - deltaTime);</span>
+        }
+<span class="fc" id="L113">    }</span>
+
+    public void moverPara(double novoX, double novoY) {
+<span class="fc" id="L116">        this.x = novoX;</span>
+<span class="fc" id="L117">        this.y = novoY;</span>
+<span class="fc" id="L118">    }</span>
+
+    // === Implementação de DamageTarget (Desacoplamento com o Sistema de Armadilhas) ===
+
+    @Override
+    public void takeDamage(int damage, DamageSource source) {
+<span class="fc" id="L124">        tomarDano(damage);</span>
+<span class="fc" id="L125">    }</span>
+
+    @Override
+    public void applyKnockback(double forceX, double forceY) {
+<span class="fc" id="L129">        this.ultimoKnockbackX = forceX;</span>
+<span class="fc" id="L130">        this.ultimoKnockbackY = forceY;</span>
+<span class="fc" id="L131">    }</span>
+
+    @Override
+    public double getX() {
+<span class="fc" id="L135">        return x;</span>
+    }
+
+    public void setX(double x) {
+<span class="nc" id="L139">        this.x = x;</span>
+<span class="nc" id="L140">    }</span>
+
+    @Override
+    public double getY() {
+<span class="fc" id="L144">        return y;</span>
+    }
+
+    public void setY(double y) {
+<span class="nc" id="L148">        this.y = y;</span>
+<span class="nc" id="L149">    }</span>
+
+    @Override
+    public Hitbox getHitbox() {
+<span class="fc" id="L153">        return hitbox;</span>
+    }
+
+    @Override
+    public boolean isAlive() {
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        return !estaMorto();</span>
+    }
+
+    @Override
+    public boolean isInvulnerable() {
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        return invulnerabilityTimer &gt; 0;</span>
+    }
+
+    @Override
+    public void activateInvulnerability(double durationSeconds) {
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (durationSeconds &gt; 0) {</span>
+<span class="fc" id="L169">            this.invulnerabilityTimer = Math.max(this.invulnerabilityTimer, durationSeconds);</span>
+        }
+<span class="fc" id="L171">    }</span>
+
+    public double getUltimoKnockbackX() {
+<span class="nc" id="L174">        return ultimoKnockbackX;</span>
+    }
+
+    public double getUltimoKnockbackY() {
+<span class="nc" id="L178">        return ultimoKnockbackY;</span>
+    }
+
+    // sobrescrita do toString() herdado de Object
+    // permite exibir informações do personagem de forma legivel, nemilha tinha pedido pra usar isso aqui na aula passada - hiago
+    @Override
+    public String toString() {
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        return nome + &quot; [Vida: &quot; + vidaAtual + &quot;/&quot; + vidaMaxima + (estaMorto() ? &quot; (Morto)&quot; : &quot;&quot;) + &quot;]&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

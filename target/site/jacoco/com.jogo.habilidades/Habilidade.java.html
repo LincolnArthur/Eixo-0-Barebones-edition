@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Habilidade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.habilidades</a> &gt; <span class="el_source">Habilidade.java</span></div><h1>Habilidade.java</h1><pre class="source lang-java linenums">package com.jogo.habilidades;
+
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Personagem;
+
+//Classe abstrata que cria as habilidades utilizaveis pelo player -lincoln
+public abstract class Habilidade {
+    private boolean aprendida;
+    private double tempoEspera;
+    private double tempoRestante;
+    private double duracao; // duracao da habilidade sendo usada até acabar -Raioni
+    private int custoEnergia;
+
+
+    //Construtor do escopo basico de uma habilidade -Raioni
+<span class="fc" id="L16">    public Habilidade(boolean aprendida, double tempoEspera, int custoEnergia, double duracao) {</span>
+<span class="fc" id="L17">        this.aprendida = aprendida;</span>
+<span class="fc" id="L18">        this.tempoEspera = tempoEspera;</span>
+<span class="fc" id="L19">        this.custoEnergia = custoEnergia;</span>
+<span class="fc" id="L20">        this.duracao = duracao;</span>
+<span class="fc" id="L21">        this.tempoRestante = 0.0; // toda habilidade nasce disponível, sem cooldown ativo</span>
+<span class="fc" id="L22">    }</span>
+
+    public void atualizar(double dt) {
+<span class="fc" id="L25">        tempoRestante = Math.max(0.0, tempoRestante - dt);</span>
+<span class="fc" id="L26">    }</span>
+
+    public double getTempoEspera(){
+<span class="nc" id="L29">        return this.tempoEspera;</span>
+    }
+
+    public double getDuracao(){
+<span class="nc" id="L33">        return this.duracao;</span>
+    }
+
+    public int getCustoEnergia(){
+<span class="nc" id="L37">        return this.custoEnergia;</span>
+    }
+
+    public boolean isAprendida(){ //usa 'is' para retorno boleano no lugar do get -Raioni
+<span class="fc" id="L41">        return this.aprendida;</span>
+    }
+    
+    public void setTempoEspera(double tempoEspera){ //usa 'set' pra definir ao invés de retornar -lincoln
+<span class="nc" id="L45">        this.tempoEspera = tempoEspera;</span>
+<span class="nc" id="L46">    }</span>
+    public void setAprendida(boolean aprendida){
+<span class="fc" id="L48">        this.aprendida = aprendida;</span>
+<span class="fc" id="L49">    }</span>
+
+    public boolean estaDisponivel() {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        return tempoRestante &lt;= 0.0;</span>
+    }
+
+    public void setCustoEnergia(int custoEnergia){
+<span class="nc" id="L56">        this.custoEnergia = custoEnergia;</span>
+<span class="nc" id="L57">    }</span>
+    public void setDuracao(double duracao){
+<span class="nc" id="L59">        this.duracao = duracao;</span>
+<span class="nc" id="L60">    }</span>
+
+    public boolean podeUsar(Jogador player) {
+<span class="fc bfc" id="L63" title="All 6 branches covered.">        return isAprendida() &amp;&amp; estaDisponivel() &amp;&amp; player.energiaSuficiente(custoPara(player));</span>
+    }
+
+    //Quanto essa habilidade gasta agora. Padrão: o custo fixo do
+    //construtor. O BuracoNegro sobrescreve (gasta toda a energia máxima).
+    public int custoPara(Jogador player) {
+<span class="fc" id="L69">        return custoEnergia;</span>
+    }
+
+    public double getTempoRestante() {
+<span class="nc" id="L73">        return tempoRestante;</span>
+    }
+
+    // alvo pode ser null pra habilidades que não miram em ninguém (ex: Apara, Dash) -lincoln
+    public final boolean usar(Jogador player, Personagem alvo) {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (!podeUsar(player)) {</span>
+<span class="fc" id="L79">            return false;</span>
+        }
+<span class="fc" id="L81">        player.consumirEnergia(custoPara(player));</span>
+<span class="fc" id="L82">        executar(player, alvo);</span>
+<span class="fc" id="L83">        tempoRestante = tempoEspera;</span>
+<span class="fc" id="L84">        return true;</span>
+    }
+
+    public abstract void executar(Jogador usuario, Personagem alvo);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

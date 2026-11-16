@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DamageTarget.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">DamageTarget.java</span></div><h1>DamageTarget.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+/**
+ * Interface que representa um alvo passível de receber dano e knockback de armadilhas.
+ *
+ * Desacopla o sistema de armadilhas das implementações específicas da engine gráfica
+ * ou da classe concreta do Jogador, facilitando testes unitários e extensibilidade.
+ */
+public interface DamageTarget {
+
+    /**
+     * Aplica o dano recebido ao alvo.
+     *
+     * @param damage Quantidade de vida a subtrair.
+     * @param source Fonte causadora do dano.
+     */
+    void takeDamage(int damage, DamageSource source);
+
+    /**
+     * Aplica um vetor de empurrão (knockback) ao alvo.
+     *
+     * @param forceX Componente horizontal da força.
+     * @param forceY Componente vertical da força.
+     */
+    void applyKnockback(double forceX, double forceY);
+
+    /**
+     * Posição horizontal do alvo no mundo.
+     */
+    double getX();
+
+    /**
+     * Posição vertical do alvo no mundo.
+     */
+    double getY();
+
+    /**
+     * Hitbox física de detecção de colisão do alvo.
+     */
+    Hitbox getHitbox();
+
+    /**
+     * Indica se o alvo ainda está vivo e ativo para receber dano.
+     */
+    boolean isAlive();
+
+    /**
+     * Indica se o alvo está em janela de invulnerabilidade temporária (I-Frames).
+     */
+    default boolean isInvulnerable() {
+<span class="nc" id="L51">        return false;</span>
+    }
+
+    /**
+     * Ativa a invulnerabilidade temporária (I-Frames) no alvo pela duração especificada (em segundos).
+     */
+    default void activateInvulnerability(double durationSeconds) {
+<span class="nc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Projetil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.combate</a> &gt; <span class="el_source">Projetil.java</span></div><h1>Projetil.java</h1><pre class="source lang-java linenums">package com.jogo.combate;
+import java.util.List;
+import com.jogo.personagens.Personagem;
+
+//Molde pra classe projetil
+//Teoricamente, seria implementado com valores posicionais x e y
+//Como não tem interface gráfica, a &quot;linha de tiro&quot; é a ordem da lista de alvos
+//Quem causa o dano é o projétil, usando Ataque
+public class Projetil {
+    private int dano;
+
+<span class="fc" id="L12">    public Projetil(int dano) {</span>
+<span class="fc" id="L13">        this.dano = dano;</span>
+<span class="fc" id="L14">    }</span>
+
+    public int getDano() {
+<span class="fc" id="L17">        return dano;</span>
+    }
+
+    // Projétil comum: para no primeiro alvo vivo
+    public void atingir(List&lt;Personagem&gt; alvos) {
+<span class="fc" id="L22">        atingir(alvos, 1);</span>
+<span class="fc" id="L23">    }</span>
+
+    // Projétil que atravessa: acerta até quantidadeMaxima alvos vivos,
+    // na ordem da &quot;linha de tiro&quot;. Morto não conta, o tiro passa direto
+    public void atingir(List&lt;Personagem&gt; alvos, int quantidadeMaxima) {
+<span class="fc" id="L28">        int acertados = 0;</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        for (Personagem alvo : alvos) {</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">            if (acertados &gt;= quantidadeMaxima) {</span>
+<span class="fc" id="L31">                return;</span>
+            }
+<span class="fc bfc" id="L33" title="All 2 branches covered.">            if (!alvo.estaMorto()) {</span>
+<span class="fc" id="L34">                new Ataque(dano).aplicarEm(alvo);</span>
+<span class="fc" id="L35">                acertados++;</span>
+            }
+<span class="fc" id="L37">        }</span>
+<span class="fc" id="L38">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

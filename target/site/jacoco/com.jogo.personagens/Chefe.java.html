@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Chefe.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">Chefe.java</span></div><h1>Chefe.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import com.jogo.armadilhas.BlocoQueCai;
+import com.jogo.armadilhas.DamageTarget;
+import com.jogo.armadilhas.Trap;
+import com.jogo.armadilhas.TrapFactory;
+import com.jogo.combate.ArmaDeFogo;
+import com.jogo.combate.Ataque;
+
+import java.util.ArrayList;
+import java.util.List;
+
+//Chefe da última sala: NEXUS. Filho de Inimigo (vida, arma, XP, congelar),
+//mas com o próprio jeito de atacar, igual ao do FXGL: sempre avisa antes
+//e segue a mesma rotação de 4 ataques (ver AtaqueChefe).
+//
+//No console não dá pra desviar, então cada ataque do chefe ocupa DOIS
+//turnos: no primeiro ele só avisa (brilha) qual vem; no segundo ataca.
+//E dos tiros e blocos, só uma parte acerta (os outros &quot;erram&quot;, como
+//quando a jogadora desvia no FXGL).
+//
+//Com metade da vida ou menos entra na fase 2: mais tiros, mais blocos,
+//mais espinhos e uma prensa em cima do jogador.
+//
+//Sobrescreve também como as magias o afetam (polimorfismo): congela só
+//metade do tempo e só perde 25% da vida máxima no Buraco Negro.
+public class Chefe extends Inimigo {
+
+    //Arena do FXGL (1280 px) e tamanho dos espinhos/prensa do ataque ARMADILHAS
+    private static final double LARGURA_ARENA = 1280;
+    private static final double LARGURA_ESPINHOS = 64;
+    private static final double ALTURA_ESPINHOS = 32;
+    private static final double LADO_PRENSA = 64;
+    private static final double ALTURA_DA_PRENSA = 300;
+    private static final double ESPACO_ENTRE_ESPINHOS = 150;
+    //Passo da simulação das armadilhas (segundos) e tempo máximo de um ciclo
+    private static final double PASSO = 0.1;
+    private static final double DURACAO_MAXIMA_ARMADILHAS = 7.0;
+
+    private final int dano;
+<span class="fc" id="L41">    private AtaqueChefe proximoAtaque = AtaqueChefe.RAJADA;</span>
+    private AtaqueChefe ataqueAtual;
+<span class="fc" id="L43">    private boolean avisando = false; //true: no próximo turno ele ataca</span>
+<span class="fc" id="L44">    private String ultimaAcao = &quot;&quot;;</span>
+<span class="fc" id="L45">    private final List&lt;Trap&gt; armadilhasDoUltimoAtaque = new ArrayList&lt;&gt;();</span>
+
+    public Chefe(String nome, int vidaMaxima, int dano) {
+<span class="fc" id="L48">        super(nome, vidaMaxima, new ArmaDeFogo(&quot;canhao-chefe&quot;, &quot;Canhão&quot;, &quot;Arma do chefe&quot;, dano, 0.0));</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (dano &lt;= 0) {</span>
+<span class="nc" id="L50">            throw new IllegalArgumentException(&quot;Dano do chefe precisa ser positivo: &quot; + dano);</span>
+        }
+<span class="fc" id="L52">        this.dano = dano;</span>
+<span class="fc" id="L53">    }</span>
+
+    //=== Fases ===
+
+    public int getFase() {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        return getVidaAtual() * 2 &lt;= getVidaMaxima() ? 2 : 1;</span>
+    }
+
+    public int getQuantidadeTiros() {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        return getFase() == 1 ? 5 : 7;</span>
+    }
+
+    //Quantos tiros da rajada acertam (o resto &quot;o jogador desviou&quot;)
+    public int getTirosQueAcertam() {
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        return getFase() == 1 ? 2 : 3;</span>
+    }
+
+    public int getQuantidadeBlocos() {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        return getFase() == 1 ? 4 : 6;</span>
+    }
+
+    public int getBlocosQueAcertam() {
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        return getFase() == 1 ? 1 : 2;</span>
+    }
+
+    public int getQuantidadeEspinhos() {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        return getFase() == 1 ? 3 : 5;</span>
+    }
+
+    //A prensa em cima do jogador só vem na fase 2
+    public boolean usaPrensa() {
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        return getFase() == 2;</span>
+    }
+
+    //Espinhos espalhados em volta de um x (um embaixo dele), sem sair da arena
+    public List&lt;Double&gt; calcularPosicoesEspinhos(double xCentro) {
+<span class="fc" id="L89">        List&lt;Double&gt; posicoes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L90">        int n = getQuantidadeEspinhos();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (int i = 0; i &lt; n; i++) {</span>
+<span class="fc" id="L92">            double x = xCentro - LARGURA_ESPINHOS / 2 + (i - n / 2) * ESPACO_ENTRE_ESPINHOS;</span>
+<span class="fc" id="L93">            x = Math.max(10, Math.min(LARGURA_ARENA - LARGURA_ESPINHOS - 10, x));</span>
+<span class="fc" id="L94">            posicoes.add(x);</span>
+        }
+<span class="fc" id="L96">        return posicoes;</span>
+    }
+
+    //=== Turno do chefe ===
+
+    //Sobrescreve o iniciarAtaque() do Inimigo: em vez de um golpe com a
+    //arma, alterna entre avisar e executar o ataque da vez
+    @Override
+    public void iniciarAtaque(Personagem vitima) {
+<span class="pc bpc" id="L105" title="3 of 6 branches missed.">        if (estaMorto() || vitima == null || vitima.estaMorto()) {</span>
+<span class="nc" id="L106">            ultimaAcao = &quot;&quot;;</span>
+<span class="nc" id="L107">            return;</span>
+        }
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (!avisando) {</span>
+<span class="fc" id="L110">            ataqueAtual = proximoAtaque;</span>
+<span class="fc" id="L111">            proximoAtaque = proximoAtaque.proximo();</span>
+<span class="fc" id="L112">            avisando = true;</span>
+<span class="fc" id="L113">            ultimaAcao = getNome() + &quot; brilha e prepara: &quot; + ataqueAtual.getNome() + &quot;!&quot;;</span>
+<span class="fc" id="L114">            return;</span>
+        }
+<span class="fc" id="L116">        avisando = false;</span>
+<span class="fc" id="L117">        int vidaAntes = vitima.getVidaAtual();</span>
+<span class="pc bpc" id="L118" title="1 of 5 branches missed.">        switch (ataqueAtual) {</span>
+            case RAJADA -&gt; {
+<span class="fc" id="L120">                aplicarVezes(vitima, getTirosQueAcertam(), dano);</span>
+<span class="fc" id="L121">                ultimaAcao = &quot;Rajada: &quot; + getQuantidadeTiros() + &quot; tiros, &quot; + getTirosQueAcertam() + &quot; acertam.&quot;;</span>
+<span class="fc" id="L122">            }</span>
+            case INVESTIDA -&gt; {
+<span class="fc" id="L124">                aplicarVezes(vitima, 1, dano * 2);</span>
+<span class="fc" id="L125">                ultimaAcao = &quot;Investida: &quot; + getNome() + &quot; mergulha em cima de &quot; + vitima.getNome() + &quot; (dano em dobro).&quot;;</span>
+<span class="fc" id="L126">            }</span>
+            case CHUVA -&gt; {
+<span class="fc" id="L128">                aplicarVezes(vitima, getBlocosQueAcertam(), dano);</span>
+<span class="fc" id="L129">                ultimaAcao = &quot;Chuva de dados: &quot; + getQuantidadeBlocos() + &quot; blocos caem, &quot;</span>
+<span class="fc" id="L130">                        + getBlocosQueAcertam() + &quot; acertam.&quot;;</span>
+<span class="fc" id="L131">            }</span>
+<span class="fc" id="L132">            case ARMADILHAS -&gt; ultimaAcao = plantarArmadilhas(vitima);</span>
+        }
+<span class="pc bpc" id="L134" title="3 of 4 branches missed.">        if (vitima.getVidaAtual() == vidaAntes &amp;&amp; ataqueAtual != AtaqueChefe.ARMADILHAS) {</span>
+<span class="nc" id="L135">            ultimaAcao += &quot; (sem dano)&quot;;</span>
+        }
+<span class="fc" id="L137">    }</span>
+
+    private void aplicarVezes(Personagem vitima, int vezes, int danoPorAcerto) {
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        for (int i = 0; i &lt; vezes; i++) {</span>
+<span class="fc" id="L141">            new Ataque(danoPorAcerto).aplicarEm(vitima);</span>
+        }
+<span class="fc" id="L143">    }</span>
+
+    //Usa o sistema de armadilhas de verdade: cria os espinhos (e a prensa
+    //na fase 2) já acionados em volta do jogador e roda o ciclo deles
+    //(aviso -&gt; ativo -&gt; recarga). Quem estiver em cima quando ficarem
+    //ativos toma o dano, com a invencibilidade de 1 s das armadilhas.
+    private String plantarArmadilhas(Personagem vitima) {
+<span class="fc" id="L150">        armadilhasDoUltimoAtaque.clear();</span>
+<span class="fc" id="L151">        double alturaVitima = vitima.getHitbox().getHeight();</span>
+<span class="fc" id="L152">        double centroX = vitima.getX() + vitima.getHitbox().getWidth() / 2;</span>
+<span class="fc" id="L153">        double ySpikes = vitima.getY() + alturaVitima - ALTURA_ESPINHOS;</span>
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        for (double x : calcularPosicoesEspinhos(centroX)) {</span>
+<span class="fc" id="L156">            Trap espinhos = TrapFactory.createSpikes(x, ySpikes, LARGURA_ESPINHOS, ALTURA_ESPINHOS);</span>
+<span class="fc" id="L157">            espinhos.setDamage(dano);</span>
+<span class="fc" id="L158">            armadilhasDoUltimoAtaque.add(espinhos);</span>
+<span class="fc" id="L159">        }</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (usaPrensa()) {</span>
+<span class="fc" id="L161">            double xPrensa = centroX - LADO_PRENSA / 2;</span>
+<span class="fc" id="L162">            double yTopo = vitima.getY() - ALTURA_DA_PRENSA;</span>
+            //Cai até a base dela ficar no pé do jogador
+<span class="fc" id="L164">            double queda = (vitima.getY() + alturaVitima - LADO_PRENSA) - yTopo;</span>
+<span class="fc" id="L165">            BlocoQueCai prensa = TrapFactory.createFallingBlock(xPrensa, yTopo, LADO_PRENSA, LADO_PRENSA, queda);</span>
+<span class="fc" id="L166">            prensa.setDamage(dano * 2);</span>
+<span class="fc" id="L167">            armadilhasDoUltimoAtaque.add(prensa);</span>
+        }
+
+<span class="fc" id="L170">        int vidaAntes = vitima.getVidaAtual();</span>
+<span class="fc" id="L171">        int acertos = simularArmadilhas(armadilhasDoUltimoAtaque, vitima);</span>
+<span class="fc" id="L172">        String texto = &quot;Armadilhas: brotam &quot; + getQuantidadeEspinhos() + &quot; espinhos em volta de &quot; + vitima.getNome()</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                + (usaPrensa() ? &quot; e uma prensa cai em cima&quot; : &quot;&quot;)</span>
+<span class="fc" id="L174">                + &quot; (&quot; + acertos + &quot; acerto(s), -&quot; + (vidaAntes - vitima.getVidaAtual()) + &quot;).&quot;;</span>
+<span class="fc" id="L175">        return texto;</span>
+    }
+
+    //Roda as armadilhas em passos pequenos até o ciclo acabar e devolve
+    //quantas acertaram. É o mesmo update()/checkCollision() que a Sala usa.
+    private int simularArmadilhas(List&lt;Trap&gt; armadilhas, DamageTarget alvo) {
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        for (Trap armadilha : armadilhas) {</span>
+<span class="fc" id="L182">            armadilha.onTrigger(); //já nascem avisando, sem esperar o jogador chegar perto</span>
+<span class="fc" id="L183">        }</span>
+<span class="fc" id="L184">        int acertos = 0;</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        for (double t = 0; t &lt; DURACAO_MAXIMA_ARMADILHAS; t += PASSO) {</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if (alvo instanceof Personagem p) {</span>
+<span class="fc" id="L187">                p.atualizar(PASSO); //a invencibilidade de 1 s também passa</span>
+            }
+<span class="fc bfc" id="L189" title="All 2 branches covered.">            for (Trap armadilha : armadilhas) {</span>
+<span class="fc" id="L190">                armadilha.update(PASSO);</span>
+<span class="pc bpc" id="L191" title="1 of 4 branches missed.">                if (alvo.isAlive() &amp;&amp; armadilha.checkCollision(alvo)) {</span>
+<span class="fc" id="L192">                    acertos++;</span>
+                }
+<span class="fc" id="L194">            }</span>
+        }
+<span class="fc" id="L196">        return acertos;</span>
+    }
+
+    //=== O que muda em relação aos outros inimigos ===
+
+    @Override
+    public String descreverUltimaAcao() {
+<span class="fc" id="L203">        return ultimaAcao;</span>
+    }
+
+    @Override
+    public String getNomeAtaque() {
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">        return ataqueAtual == null ? getArma().getNome() : ataqueAtual.getNome();</span>
+    }
+
+    //Gelo segura o chefe só metade do tempo
+    @Override
+    public void congelar(double turnos) {
+<span class="fc" id="L214">        super.congelar(turnos / 2);</span>
+<span class="fc" id="L215">    }</span>
+
+    //Buraco Negro tira só 25% da vida máxima, em vez de matar
+    @Override
+    public int danoDeBuracoNegro() {
+<span class="fc" id="L220">        return Math.max(1, getVidaMaxima() / 4);</span>
+    }
+
+    @Override
+    public int getExperienciaConcedida() {
+<span class="fc" id="L225">        return 300;</span>
+    }
+
+    public AtaqueChefe getProximoAtaque() {
+<span class="nc" id="L229">        return proximoAtaque;</span>
+    }
+
+    public AtaqueChefe getAtaqueAtual() {
+<span class="fc" id="L233">        return ataqueAtual;</span>
+    }
+
+    public boolean estaAvisando() {
+<span class="fc" id="L237">        return avisando;</span>
+    }
+
+    public List&lt;Trap&gt; getArmadilhasDoUltimoAtaque() {
+<span class="fc" id="L241">        return List.copyOf(armadilhasDoUltimoAtaque);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapProceduralGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">TrapProceduralGenerator.java</span></div><h1>TrapProceduralGenerator.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Gerador Procedural de Armadilhas ({@code TrapProceduralGenerator}) — Lógica Pura de Domínio.
+ *
+ * Totalmente desacoplado de motores gráficos, varre os limites geométricos das plataformas/tetos
+ * ({@link PlatformBounds}) e posiciona armadilhas automaticamente respeitando:
+ * &lt;ol&gt;
+ *   &lt;li&gt;&lt;b&gt;Ancoragem Física (Snap-to-Grid/Surface):&lt;/b&gt;
+ *     &lt;ul&gt;
+ *       &lt;li&gt;{@link SpikesRetrateis}: Gerados apoiados exatamente sobre a superfície superior
+ *           de plataformas/chãos sólidos ({@code y = plat.y - altura}), com espaço vazio acima.&lt;/li&gt;
+ *       &lt;li&gt;{@link BlocoQueCai}: Gerados encostados na face inferior de tetos/plataformas altas
+ *           ({@code y = plat.y + plat.altura}), priorizando o teto superior ({@code y = 0}) com
+ *           toda a altura vertical livre até o piso principal.&lt;/li&gt;
+ *     &lt;/ul&gt;
+ *   &lt;/li&gt;
+ *   &lt;li&gt;&lt;b&gt;Regras de Fair Play:&lt;/b&gt;
+ *     &lt;ul&gt;
+ *       &lt;li&gt;&lt;b&gt;Zona Segura (Safe Zone):&lt;/b&gt; Área livre de armadilhas ao redor do ponto de spawn do jogador.&lt;/li&gt;
+ *       &lt;li&gt;&lt;b&gt;Distância Mínima:&lt;/b&gt; Espaçamento mínimo entre armadilhas para nunca bloquear passagens inteiras.&lt;/li&gt;
+ *       &lt;li&gt;&lt;b&gt;Seed Fixa Padrão ({@link #DEFAULT_SEED}):&lt;/b&gt; Garante layouts previsíveis e consistentes,
+ *           mantendo sobrecargas para seeds customizadas ou aleatórias.&lt;/li&gt;
+ *     &lt;/ul&gt;
+ *   &lt;/li&gt;
+ * &lt;/ol&gt;
+ */
+public class TrapProceduralGenerator {
+
+    public static final long DEFAULT_SEED = 12345L;
+
+    /**
+     * Representa os limites geométricos de uma plataforma ou bloco sólido do cenário.
+     */
+    public static class PlatformBounds {
+        private final double x;
+        private final double y;
+        private final double width;
+        private final double height;
+
+<span class="fc" id="L46">        public PlatformBounds(double x, double y, double width, double height) {</span>
+<span class="fc" id="L47">            this.x = x;</span>
+<span class="fc" id="L48">            this.y = y;</span>
+<span class="fc" id="L49">            this.width = width;</span>
+<span class="fc" id="L50">            this.height = height;</span>
+<span class="fc" id="L51">        }</span>
+
+<span class="fc" id="L53">        public double getX() { return x; }</span>
+<span class="fc" id="L54">        public double getY() { return y; }</span>
+<span class="fc" id="L55">        public double getWidth() { return width; }</span>
+<span class="nc" id="L56">        public double getHeight() { return height; }</span>
+<span class="fc" id="L57">        public double getMaxX() { return x + width; }</span>
+<span class="fc" id="L58">        public double getMaxY() { return y + height; }</span>
+
+        public boolean intersects(double rx, double ry, double rw, double rh) {
+<span class="fc bfc" id="L61" title="All 8 branches covered.">            return this.x &lt; (rx + rw)</span>
+                    &amp;&amp; (this.x + this.width) &gt; rx
+                    &amp;&amp; this.y &lt; (ry + rh)
+                    &amp;&amp; (this.y + this.height) &gt; ry;
+        }
+    }
+
+    /**
+     * Descreve uma armadilha posicionada pelo gerador procedural.
+     */
+    public static class TrapPlacement {
+        private final String spawnType;
+        private final Trap trap;
+        private final double x;
+        private final double y;
+        private final double width;
+        private final double height;
+        private final double fallDistance;
+        private final PlatformBounds anchorPlatform;
+
+        public TrapPlacement(String spawnType, Trap trap, double x, double y,
+                             double width, double height, double fallDistance,
+<span class="fc" id="L83">                             PlatformBounds anchorPlatform) {</span>
+<span class="fc" id="L84">            this.spawnType = spawnType;</span>
+<span class="fc" id="L85">            this.trap = trap;</span>
+<span class="fc" id="L86">            this.x = x;</span>
+<span class="fc" id="L87">            this.y = y;</span>
+<span class="fc" id="L88">            this.width = width;</span>
+<span class="fc" id="L89">            this.height = height;</span>
+<span class="fc" id="L90">            this.fallDistance = fallDistance;</span>
+<span class="fc" id="L91">            this.anchorPlatform = anchorPlatform;</span>
+<span class="fc" id="L92">        }</span>
+
+<span class="fc" id="L94">        public String getSpawnType() { return spawnType; }</span>
+<span class="fc" id="L95">        public Trap getTrap() { return trap; }</span>
+<span class="fc" id="L96">        public double getX() { return x; }</span>
+<span class="fc" id="L97">        public double getY() { return y; }</span>
+<span class="fc" id="L98">        public double getWidth() { return width; }</span>
+<span class="fc" id="L99">        public double getHeight() { return height; }</span>
+<span class="fc" id="L100">        public double getFallDistance() { return fallDistance; }</span>
+<span class="fc" id="L101">        public PlatformBounds getAnchorPlatform() { return anchorPlatform; }</span>
+<span class="fc" id="L102">        public double getCenterX() { return x + width / 2.0; }</span>
+<span class="fc" id="L103">        public double getCenterY() { return y + height / 2.0; }</span>
+    }
+
+    private TrapGenerationConfig config;
+
+    /**
+     * Construtor padrão com {@link #DEFAULT_SEED} ({@code 12345L}) para layout consistente.
+     */
+    public TrapProceduralGenerator() {
+<span class="fc" id="L112">        this(new TrapGenerationConfig().withSeed(DEFAULT_SEED));</span>
+<span class="fc" id="L113">    }</span>
+
+    /**
+     * Construtor sobrecarregado para seed fixa customizada.
+     */
+    public TrapProceduralGenerator(long customSeed) {
+<span class="nc" id="L119">        this(new TrapGenerationConfig().withSeed(customSeed));</span>
+<span class="nc" id="L120">    }</span>
+
+    /**
+     * Construtor sobrecarregado para escolher entre seed aleatória ({@code true}) ou padrão ({@code false}).
+     */
+    public TrapProceduralGenerator(boolean useRandomSeed) {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        this(useRandomSeed</span>
+<span class="nc" id="L127">                ? new TrapGenerationConfig().withRandomSeed()</span>
+<span class="nc" id="L128">                : new TrapGenerationConfig().withSeed(DEFAULT_SEED));</span>
+<span class="nc" id="L129">    }</span>
+
+<span class="fc" id="L131">    public TrapProceduralGenerator(TrapGenerationConfig config) {</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        this.config = (config != null) ? config : new TrapGenerationConfig().withSeed(DEFAULT_SEED);</span>
+<span class="fc" id="L133">    }</span>
+
+    public TrapGenerationConfig getConfig() {
+<span class="fc" id="L136">        return config;</span>
+    }
+
+    public void setConfig(TrapGenerationConfig config) {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (config != null) {</span>
+<span class="nc" id="L141">            this.config = config;</span>
+        }
+<span class="nc" id="L143">    }</span>
+
+    /**
+     * Gera diretamente a lista polimórfica de instâncias de {@link Trap} para as plataformas informadas.
+     */
+    public List&lt;Trap&gt; generateTraps(List&lt;PlatformBounds&gt; platforms,
+                                    double levelWidth,
+                                    double levelHeight,
+                                    double playerX,
+                                    double playerY) {
+<span class="fc" id="L153">        return generateTraps(platforms, levelWidth, levelHeight, playerX, playerY, config.getSeed());</span>
+    }
+
+    /**
+     * Método sobrecarregado que gera a lista de {@link Trap} com uma {@code customSeed} específica.
+     */
+    public List&lt;Trap&gt; generateTraps(List&lt;PlatformBounds&gt; platforms,
+                                    double levelWidth,
+                                    double levelHeight,
+                                    double playerX,
+                                    double playerY,
+                                    Long customSeed) {
+<span class="fc" id="L165">        List&lt;TrapPlacement&gt; placements = generatePlacements(</span>
+                platforms, levelWidth, levelHeight, playerX, playerY, customSeed
+        );
+<span class="fc" id="L168">        List&lt;Trap&gt; traps = new ArrayList&lt;&gt;(placements.size());</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        for (TrapPlacement p : placements) {</span>
+<span class="fc" id="L170">            traps.add(p.getTrap());</span>
+<span class="fc" id="L171">        }</span>
+<span class="fc" id="L172">        return traps;</span>
+    }
+
+    /**
+     * Algoritmo principal de geração procedural utilizando a seed padrão/configurada.
+     */
+    public List&lt;TrapPlacement&gt; generatePlacements(List&lt;PlatformBounds&gt; platforms,
+                                                  double levelWidth,
+                                                  double levelHeight,
+                                                  double playerX,
+                                                  double playerY) {
+<span class="fc" id="L183">        return generatePlacements(platforms, levelWidth, levelHeight, playerX, playerY, config.getSeed());</span>
+    }
+
+    /**
+     * Algoritmo principal de geração procedural sobrecarregado para aceitar uma {@code seedOverride}
+     * customizada (ou {@code null} para geração puramente aleatória).
+     */
+    public List&lt;TrapPlacement&gt; generatePlacements(List&lt;PlatformBounds&gt; platforms,
+                                                  double levelWidth,
+                                                  double levelHeight,
+                                                  double playerX,
+                                                  double playerY,
+                                                  Long seedOverride) {
+<span class="pc bpc" id="L196" title="3 of 6 branches missed.">        if (platforms == null || platforms.isEmpty() || config.getMaxTraps() &lt;= 0) {</span>
+<span class="nc" id="L197">            return Collections.emptyList();</span>
+        }
+
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        Random random = (seedOverride != null)</span>
+<span class="fc" id="L201">                ? new Random(seedOverride)</span>
+<span class="pc" id="L202">                : new Random();</span>
+
+<span class="fc" id="L204">        List&lt;TrapPlacement&gt; ceilingCandidates = findCeilingBlockCandidates(platforms, levelWidth, playerX, playerY);</span>
+<span class="fc" id="L205">        List&lt;TrapPlacement&gt; surfaceCandidates = findFloorSpikeCandidates(platforms, levelWidth, playerX, playerY);</span>
+
+<span class="fc" id="L207">        Collections.shuffle(ceilingCandidates, random);</span>
+<span class="fc" id="L208">        Collections.shuffle(surfaceCandidates, random);</span>
+
+<span class="fc" id="L210">        List&lt;TrapPlacement&gt; allCandidates = interleaveCandidates(ceilingCandidates, surfaceCandidates);</span>
+
+<span class="fc" id="L212">        List&lt;TrapPlacement&gt; selected = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L213">        List&lt;TrapPlacement&gt; skippedByChance = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        for (TrapPlacement candidate : allCandidates) {</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">            if (selected.size() &gt;= config.getMaxTraps()) {</span>
+<span class="nc" id="L217">                break;</span>
+            }
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (!respectsMinDistance(candidate, selected)) {</span>
+<span class="fc" id="L220">                continue;</span>
+            }
+
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (random.nextDouble() &lt;= config.getSpawnChance()) {</span>
+<span class="fc" id="L224">                selected.add(candidate);</span>
+            } else {
+<span class="fc" id="L226">                skippedByChance.add(candidate);</span>
+            }
+<span class="fc" id="L228">        }</span>
+
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        if (selected.size() &lt; config.getMinTraps()) {</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">            for (TrapPlacement fallback : skippedByChance) {</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">                if (selected.size() &gt;= config.getMinTraps() || selected.size() &gt;= config.getMaxTraps()) {</span>
+<span class="nc" id="L233">                    break;</span>
+                }
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                if (respectsMinDistance(fallback, selected)) {</span>
+<span class="nc" id="L236">                    selected.add(fallback);</span>
+                }
+<span class="nc" id="L238">            }</span>
+        }
+
+<span class="fc" id="L241">        return selected;</span>
+    }
+
+    private List&lt;TrapPlacement&gt; findCeilingBlockCandidates(List&lt;PlatformBounds&gt; platforms,
+                                                           double levelWidth,
+                                                           double playerX,
+                                                           double playerY) {
+<span class="fc" id="L248">        List&lt;TrapPlacement&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L249">        double blockW = config.getBlockWidth();</span>
+<span class="fc" id="L250">        double blockH = config.getBlockHeight();</span>
+<span class="fc" id="L251">        double stepX = Math.max(16.0, config.getGridStepX());</span>
+
+<span class="fc" id="L253">        List&lt;PlatformBounds&gt; ceilingPlatforms = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        for (PlatformBounds p : platforms) {</span>
+<span class="pc bpc" id="L255" title="1 of 4 branches missed.">            if (p.getY() &lt;= config.getMaxCeilingTopY() &amp;&amp; p.getWidth() &gt;= blockW) {</span>
+<span class="fc" id="L256">                ceilingPlatforms.add(p);</span>
+            }
+<span class="fc" id="L258">        }</span>
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">        if (ceilingPlatforms.isEmpty()) {</span>
+<span class="nc" id="L260">            ceilingPlatforms.addAll(platforms);</span>
+        }
+
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        for (PlatformBounds ceiling : ceilingPlatforms) {</span>
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">            if (ceiling.getWidth() &lt; blockW) {</span>
+<span class="nc" id="L265">                continue;</span>
+            }
+
+<span class="fc" id="L268">            double anchorY = ceiling.getMaxY();</span>
+
+<span class="fc" id="L270">            List&lt;Double&gt; xPositions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L271">            double startX = ceiling.getX() + Math.min(config.getPlatformEdgeMargin(), (ceiling.getWidth() - blockW) / 2.0);</span>
+<span class="fc" id="L272">            double endX = ceiling.getMaxX() - blockW - Math.min(config.getPlatformEdgeMargin(), (ceiling.getWidth() - blockW) / 2.0);</span>
+
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            for (double x = startX; x &lt;= endX + 0.01; x += stepX) {</span>
+<span class="fc" id="L275">                xPositions.add(x);</span>
+            }
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">            if (xPositions.isEmpty()) {</span>
+<span class="nc" id="L278">                xPositions.add(ceiling.getX() + (ceiling.getWidth() - blockW) / 2.0);</span>
+            }
+
+<span class="fc bfc" id="L281" title="All 2 branches covered.">            for (double x : xPositions) {</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">                if (!isWithinLevelSafeBounds(x, blockW, levelWidth)) {</span>
+<span class="fc" id="L283">                    continue;</span>
+                }
+
+<span class="fc" id="L286">                double groundTopY = findMainGroundBelow(platforms, ceiling, x, anchorY, blockW);</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">                if (groundTopY == Double.MAX_VALUE) {</span>
+<span class="nc" id="L288">                    continue;</span>
+                }
+
+<span class="fc" id="L291">                double fallDistance = (groundTopY - blockH) - anchorY;</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">                if (fallDistance &lt; config.getMinFallClearance()) {</span>
+<span class="nc" id="L293">                    continue;</span>
+                }
+
+<span class="fc bfc" id="L296" title="All 2 branches covered.">                if (!isVerticalCorridorClear(platforms, ceiling, x, anchorY, blockW, groundTopY - anchorY)) {</span>
+<span class="fc" id="L297">                    continue;</span>
+                }
+
+<span class="fc bfc" id="L300" title="All 2 branches covered.">                if (isInsidePlayerSafeZone(x, anchorY, blockW, groundTopY - anchorY, playerX, playerY)) {</span>
+<span class="fc" id="L301">                    continue;</span>
+                }
+
+<span class="fc" id="L304">                BlocoQueCai bloco = TrapFactory.createFallingBlock(x, anchorY, blockW, blockH, fallDistance);</span>
+<span class="fc" id="L305">                candidates.add(new TrapPlacement(</span>
+                        &quot;armadilha_bloco&quot;,
+                        bloco,
+                        x,
+                        anchorY,
+                        blockW,
+                        blockH,
+                        fallDistance,
+                        ceiling
+                ));
+<span class="fc" id="L315">            }</span>
+<span class="fc" id="L316">        }</span>
+
+<span class="fc" id="L318">        return candidates;</span>
+    }
+
+    private List&lt;TrapPlacement&gt; findFloorSpikeCandidates(List&lt;PlatformBounds&gt; platforms,
+                                                         double levelWidth,
+                                                         double playerX,
+                                                         double playerY) {
+<span class="fc" id="L325">        List&lt;TrapPlacement&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L326">        double spikeW = config.getSpikeWidth();</span>
+<span class="fc" id="L327">        double spikeH = config.getSpikeHeight();</span>
+<span class="fc" id="L328">        double margin = config.getPlatformEdgeMargin();</span>
+<span class="fc" id="L329">        double stepX = Math.max(16.0, config.getGridStepX());</span>
+
+<span class="fc bfc" id="L331" title="All 2 branches covered.">        for (PlatformBounds floor : platforms) {</span>
+<span class="pc bpc" id="L332" title="1 of 4 branches missed.">            if (floor.getY() &lt;= config.getMaxCeilingTopY() || (floor.getY() - spikeH) &lt; 0) {</span>
+<span class="nc" id="L333">                continue;</span>
+            }
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">            if (floor.getWidth() &lt; spikeW + (margin * 2.0)) {</span>
+<span class="nc" id="L336">                continue;</span>
+            }
+
+<span class="fc" id="L339">            double anchorY = floor.getY() - spikeH;</span>
+
+<span class="fc" id="L341">            double startX = floor.getX() + margin;</span>
+<span class="fc" id="L342">            double endX = floor.getMaxX() - spikeW - margin;</span>
+
+<span class="fc bfc" id="L344" title="All 2 branches covered.">            for (double x = startX; x &lt;= endX + 0.01; x += stepX) {</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">                if (!isWithinLevelSafeBounds(x, spikeW, levelWidth)) {</span>
+<span class="fc" id="L346">                    continue;</span>
+                }
+
+<span class="fc" id="L349">                double clearanceHeight = Math.max(spikeH, config.getMinTopClearance());</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">                if (!isTopClearanceFree(platforms, floor, x, floor.getY() - clearanceHeight, spikeW, clearanceHeight)) {</span>
+<span class="nc" id="L351">                    continue;</span>
+                }
+
+<span class="fc bfc" id="L354" title="All 2 branches covered.">                if (isInsidePlayerSafeZone(x, anchorY, spikeW, spikeH, playerX, playerY)) {</span>
+<span class="fc" id="L355">                    continue;</span>
+                }
+
+<span class="fc" id="L358">                SpikesRetrateis spikes = TrapFactory.createSpikes(x, anchorY, spikeW, spikeH);</span>
+<span class="fc" id="L359">                candidates.add(new TrapPlacement(</span>
+                        &quot;armadilha_espinhos&quot;,
+                        spikes,
+                        x,
+                        anchorY,
+                        spikeW,
+                        spikeH,
+                        0.0,
+                        floor
+                ));
+            }
+<span class="fc" id="L370">        }</span>
+
+<span class="fc" id="L372">        return candidates;</span>
+    }
+
+    private double findMainGroundBelow(List&lt;PlatformBounds&gt; platforms,
+                                       PlatformBounds ceiling,
+                                       double x,
+                                       double startY,
+                                       double width) {
+<span class="fc" id="L380">        double lowestGroundY = -1.0;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        for (PlatformBounds plat : platforms) {</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">            if (plat == ceiling) {</span>
+<span class="fc" id="L383">                continue;</span>
+            }
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">            if (plat.getY() &lt;= startY) {</span>
+<span class="nc" id="L386">                continue;</span>
+            }
+<span class="fc bfc" id="L388" title="All 4 branches covered.">            boolean coversHorizontally = plat.getX() &lt;= x &amp;&amp; plat.getMaxX() &gt;= (x + width);</span>
+<span class="fc bfc" id="L389" title="All 4 branches covered.">            if (coversHorizontally &amp;&amp; plat.getY() &gt; lowestGroundY) {</span>
+<span class="fc" id="L390">                lowestGroundY = plat.getY();</span>
+            }
+<span class="fc" id="L392">        }</span>
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">        return lowestGroundY &gt; 0 ? lowestGroundY : Double.MAX_VALUE;</span>
+    }
+
+    private boolean isVerticalCorridorClear(List&lt;PlatformBounds&gt; platforms,
+                                            PlatformBounds ceiling,
+                                            double x,
+                                            double startY,
+                                            double width,
+                                            double corridorHeight) {
+<span class="fc" id="L402">        double checkY = startY + 1.0;</span>
+<span class="fc" id="L403">        double checkH = Math.max(1.0, corridorHeight - 2.0);</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">        for (PlatformBounds plat : platforms) {</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">            if (plat == ceiling) {</span>
+<span class="fc" id="L406">                continue;</span>
+            }
+<span class="fc bfc" id="L408" title="All 2 branches covered.">            if (plat.intersects(x, checkY, width, checkH)) {</span>
+<span class="fc" id="L409">                return false;</span>
+            }
+<span class="fc" id="L411">        }</span>
+<span class="fc" id="L412">        return true;</span>
+    }
+
+    private boolean isTopClearanceFree(List&lt;PlatformBounds&gt; platforms,
+                                       PlatformBounds floor,
+                                       double x,
+                                       double clearanceY,
+                                       double width,
+                                       double clearanceHeight) {
+<span class="fc" id="L421">        double checkH = Math.max(1.0, clearanceHeight - 1.0);</span>
+<span class="fc bfc" id="L422" title="All 2 branches covered.">        for (PlatformBounds plat : platforms) {</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">            if (plat == floor) {</span>
+<span class="fc" id="L424">                continue;</span>
+            }
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">            if (plat.intersects(x, clearanceY, width, checkH)) {</span>
+<span class="nc" id="L427">                return false;</span>
+            }
+<span class="fc" id="L429">        }</span>
+<span class="fc" id="L430">        return true;</span>
+    }
+
+    private boolean isWithinLevelSafeBounds(double x, double width, double levelWidth) {
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">        if (levelWidth &lt;= 0) {</span>
+<span class="nc" id="L435">            return true;</span>
+        }
+<span class="fc" id="L437">        double portalMargin = config.getPortalSafeMargin();</span>
+<span class="fc bfc" id="L438" title="All 4 branches covered.">        return x &gt;= portalMargin &amp;&amp; (x + width) &lt;= (levelWidth - portalMargin);</span>
+    }
+
+    private boolean isInsidePlayerSafeZone(double rx,
+                                           double ry,
+                                           double rw,
+                                           double rh,
+                                           double playerX,
+                                           double playerY) {
+<span class="fc" id="L447">        double radius = config.getSafeZoneRadius();</span>
+<span class="pc bpc" id="L448" title="1 of 2 branches missed.">        if (radius &lt;= 0) {</span>
+<span class="nc" id="L449">            return false;</span>
+        }
+
+<span class="fc" id="L452">        double horizontalDist = 0.0;</span>
+<span class="fc bfc" id="L453" title="All 2 branches covered.">        if (playerX &lt; rx) {</span>
+<span class="fc" id="L454">            horizontalDist = rx - playerX;</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        } else if (playerX &gt; (rx + rw)) {</span>
+<span class="fc" id="L456">            horizontalDist = playerX - (rx + rw);</span>
+        }
+<span class="fc bfc" id="L458" title="All 2 branches covered.">        if (horizontalDist &lt; radius) {</span>
+<span class="fc" id="L459">            return true;</span>
+        }
+
+<span class="fc" id="L462">        double closestX = Math.max(rx, Math.min(playerX, rx + rw));</span>
+<span class="fc" id="L463">        double closestY = Math.max(ry, Math.min(playerY, ry + rh));</span>
+<span class="fc" id="L464">        double dist = Math.hypot(playerX - closestX, playerY - closestY);</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">        return dist &lt; radius;</span>
+    }
+
+    private boolean respectsMinDistance(TrapPlacement candidate, List&lt;TrapPlacement&gt; selected) {
+<span class="fc" id="L469">        double minDist = config.getMinDistanceBetweenTraps();</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">        for (TrapPlacement existing : selected) {</span>
+<span class="fc" id="L471">            double distCenters = Math.hypot(</span>
+<span class="fc" id="L472">                    candidate.getCenterX() - existing.getCenterX(),</span>
+<span class="fc" id="L473">                    candidate.getCenterY() - existing.getCenterY()</span>
+            );
+<span class="fc bfc" id="L475" title="All 2 branches covered.">            if (distCenters &lt; minDist) {</span>
+<span class="fc" id="L476">                return false;</span>
+            }
+
+<span class="fc" id="L479">            double minHorizontalGap = minDist * 0.55;</span>
+<span class="fc bfc" id="L480" title="All 2 branches covered.">            boolean horizontalOverlap = (candidate.getX() - minHorizontalGap) &lt; (existing.getX() + existing.getWidth())</span>
+<span class="fc bfc" id="L481" title="All 2 branches covered.">                    &amp;&amp; (candidate.getX() + candidate.getWidth() + minHorizontalGap) &gt; existing.getX();</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">            if (horizontalOverlap) {</span>
+<span class="fc" id="L483">                return false;</span>
+            }
+<span class="fc" id="L485">        }</span>
+<span class="fc" id="L486">        return true;</span>
+    }
+
+    private List&lt;TrapPlacement&gt; interleaveCandidates(List&lt;TrapPlacement&gt; listA, List&lt;TrapPlacement&gt; listB) {
+<span class="fc" id="L490">        List&lt;TrapPlacement&gt; result = new ArrayList&lt;&gt;(listA.size() + listB.size());</span>
+<span class="fc" id="L491">        int max = Math.max(listA.size(), listB.size());</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">        for (int i = 0; i &lt; max; i++) {</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">            if (i &lt; listA.size()) {</span>
+<span class="fc" id="L494">                result.add(listA.get(i));</span>
+            }
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">            if (i &lt; listB.size()) {</span>
+<span class="fc" id="L497">                result.add(listB.get(i));</span>
+            }
+        }
+<span class="fc" id="L500">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

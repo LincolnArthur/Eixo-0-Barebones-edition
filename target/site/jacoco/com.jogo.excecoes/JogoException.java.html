@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JogoException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.excecoes</a> &gt; <span class="el_source">JogoException.java</span></div><h1>JogoException.java</h1><pre class="source lang-java linenums">package com.jogo.excecoes;
+
+//Mãe de todas as exceções próprias do jogo.
+//É &quot;checked&quot; (estende Exception, não RuntimeException): quem chama um
+//método que pode lançar uma delas é OBRIGADO pelo compilador a tratar
+//(try/catch) ou repassar (throws). Serve pra situações que podem
+//acontecer jogando normalmente, como pedir um item que não existe.
+//
+//Erro de programação (ex: criar personagem com vida negativa) não usa
+//essas: usa IllegalArgumentException, que não precisa de try/catch.
+public class JogoException extends Exception {
+
+    public JogoException(String mensagem) {
+<span class="fc" id="L14">        super(mensagem);</span>
+<span class="fc" id="L15">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

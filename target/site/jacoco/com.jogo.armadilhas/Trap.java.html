@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Trap.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">Trap.java</span></div><h1>Trap.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Classe abstrata base para todas as armadilhas do jogo.
+ *
+ * Implementa {@link DamageSource} para seguir o princípio da responsabilidade única (SRP)
+ * e o princípio aberto/fechado (OCP), permitindo que novas armadilhas sejam adicionadas
+ * sem modificar o loop de jogo ou os sistemas existentes.
+ *
+ * Arquitetura e Ciclo de Vida:
+ * 1. INACTIVE     -&gt; Armadilha armada ou oculta.
+ * 2. TRIGGERED    -&gt; Gatilho acionado (por tempo ou presença do jogador na triggerBox).
+ * 3. TELEGRAPHING -&gt; Aviso antecipado (Game Juice: tremor e indicador sonoro/visual).
+ * 4. ACTIVE       -&gt; Hitbox de dano ativa, infligindo dano a alvos que a tocarem.
+ * 5. COOLDOWN     -&gt; Período de desativação / rearme antes de retornar a INACTIVE.
+ */
+public abstract class Trap implements DamageSource {
+
+    // Identificação e posição básica no mundo
+    protected final String name;
+    protected double x;
+    protected double y;
+    protected double width;
+    protected double height;
+
+    // Caixas de colisão separadas: Hitbox de DANO vs TriggerBox de ATIVAÇÃO
+    protected Hitbox damageHitbox;
+    protected Hitbox triggerBox;
+
+    // Estado e temporizadores do ciclo de vida
+<span class="fc" id="L37">    protected TrapState state = TrapState.INACTIVE;</span>
+<span class="fc" id="L38">    protected double stateTimer = 0.0;</span>
+
+<span class="fc" id="L40">    protected double inactiveDuration = 2.0;  // Para armadilhas com ciclo automático</span>
+<span class="fc" id="L41">    protected double telegraphDuration = 0.5; // Duração do aviso antes do dano</span>
+<span class="fc" id="L42">    protected double activeDuration = 1.0;    // Duração da fase letal</span>
+<span class="fc" id="L43">    protected double cooldownDuration = 2.0;  // Duração da recarga após o ataque</span>
+
+    // Propriedades de combate
+<span class="fc" id="L46">    protected int damage = 20;</span>
+<span class="fc" id="L47">    protected double knockbackForce = 350.0;</span>
+<span class="fc" id="L48">    protected double invulnerabilityGrantDuration = 1.0; // 1.0s de I-Frames concedidos ao jogador após sofrer dano</span>
+
+    // Game Juice: tremor visual gerado durante o estado de TELEGRAPHING
+<span class="fc" id="L51">    protected double shakeIntensity = 3.0;</span>
+<span class="fc" id="L52">    protected double shakeOffsetX = 0.0;</span>
+<span class="fc" id="L53">    protected double shakeOffsetY = 0.0;</span>
+
+    // Lista de ouvintes (Observer pattern) para áudio, partículas e feedback de impacto
+<span class="fc" id="L56">    protected final List&lt;TrapListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+
+    // Permite ligar/desligar renderização de hitboxes para depuração
+<span class="fc" id="L59">    protected boolean debugHitboxes = false;</span>
+
+<span class="fc" id="L61">    public Trap(String name, double x, double y, double width, double height) {</span>
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">        if (name == null || name.isBlank()) {</span>
+<span class="nc" id="L63">            throw new IllegalArgumentException(&quot;Nome da armadilha não pode ser nulo ou vazio.&quot;);</span>
+        }
+<span class="fc" id="L65">        this.name = name;</span>
+<span class="fc" id="L66">        this.x = x;</span>
+<span class="fc" id="L67">        this.y = y;</span>
+<span class="fc" id="L68">        this.width = width;</span>
+<span class="fc" id="L69">        this.height = height;</span>
+
+        // Por padrão, a hitbox de dano possui uma margem de segurança (offset) de 2px
+<span class="fc" id="L72">        this.damageHitbox = new Hitbox(2, 2, Math.max(0, width - 4), Math.max(0, height - 4));</span>
+
+        // Por padrão, a triggerBox cobre a própria área da armadilha
+<span class="fc" id="L75">        this.triggerBox = new Hitbox(0, 0, width, height);</span>
+<span class="fc" id="L76">    }</span>
+
+    // =========================================================================
+    // CICLO DE VIDA (Lifecycle Methods)
+    // =========================================================================
+
+    public void update(double deltaTime) {
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (deltaTime &lt;= 0) {</span>
+<span class="nc" id="L84">            return;</span>
+        }
+
+<span class="fc" id="L87">        stateTimer += deltaTime;</span>
+
+<span class="pc bpc" id="L89" title="2 of 6 branches missed.">        switch (state) {</span>
+<span class="fc" id="L90">            case INACTIVE -&gt; updateInactive(deltaTime);</span>
+<span class="nc" id="L91">            case TRIGGERED -&gt; transitionTo(TrapState.TELEGRAPHING);</span>
+<span class="fc" id="L92">            case TELEGRAPHING -&gt; updateTelegraphing(deltaTime);</span>
+<span class="fc" id="L93">            case ACTIVE -&gt; updateActive(deltaTime);</span>
+<span class="fc" id="L94">            case COOLDOWN -&gt; updateCooldown(deltaTime);</span>
+        }
+
+        // Gancho polimórfico para comportamento específico de cada subclasse a cada tick
+<span class="fc" id="L98">        updateCustom(deltaTime);</span>
+<span class="fc" id="L99">    }</span>
+
+    protected void updateInactive(double deltaTime) {
+<span class="pc bpc" id="L102" title="3 of 4 branches missed.">        if (inactiveDuration &gt; 0 &amp;&amp; stateTimer &gt;= inactiveDuration) {</span>
+<span class="nc" id="L103">            onTrigger();</span>
+        }
+<span class="fc" id="L105">    }</span>
+
+    protected void updateTelegraphing(double deltaTime) {
+<span class="fc" id="L108">        double frequency = 45.0;</span>
+<span class="fc" id="L109">        shakeOffsetX = Math.sin(stateTimer * frequency) * shakeIntensity;</span>
+<span class="fc" id="L110">        shakeOffsetY = Math.cos(stateTimer * frequency) * (shakeIntensity * 0.5);</span>
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (stateTimer &gt;= telegraphDuration) {</span>
+<span class="fc" id="L113">            shakeOffsetX = 0.0;</span>
+<span class="fc" id="L114">            shakeOffsetY = 0.0;</span>
+<span class="fc" id="L115">            transitionTo(TrapState.ACTIVE);</span>
+<span class="fc" id="L116">            notifyTriggered();</span>
+        }
+<span class="fc" id="L118">    }</span>
+
+    protected void updateActive(double deltaTime) {
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (stateTimer &gt;= activeDuration) {</span>
+<span class="fc" id="L122">            transitionTo(TrapState.COOLDOWN);</span>
+        }
+<span class="fc" id="L124">    }</span>
+
+    protected void updateCooldown(double deltaTime) {
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (stateTimer &gt;= cooldownDuration) {</span>
+<span class="fc" id="L128">            onReset();</span>
+        }
+<span class="fc" id="L130">    }</span>
+
+    public void onTrigger() {
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (state == TrapState.INACTIVE) {</span>
+<span class="fc" id="L134">            transitionTo(TrapState.TRIGGERED);</span>
+<span class="fc" id="L135">            transitionTo(TrapState.TELEGRAPHING);</span>
+        }
+<span class="fc" id="L137">    }</span>
+
+    public void onReset() {
+<span class="fc" id="L140">        shakeOffsetX = 0.0;</span>
+<span class="fc" id="L141">        shakeOffsetY = 0.0;</span>
+<span class="fc" id="L142">        transitionTo(TrapState.INACTIVE);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        for (TrapListener listener : listeners) {</span>
+<span class="nc" id="L144">            listener.onReset(this);</span>
+<span class="nc" id="L145">        }</span>
+<span class="fc" id="L146">    }</span>
+
+    protected void transitionTo(TrapState newState) {
+<span class="fc" id="L149">        TrapState oldState = this.state;</span>
+<span class="fc" id="L150">        this.state = newState;</span>
+<span class="fc" id="L151">        this.stateTimer = 0.0;</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (newState == TrapState.TELEGRAPHING) {</span>
+<span class="fc" id="L154">            notifyTelegraphStarted(telegraphDuration);</span>
+        }
+
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        for (TrapListener listener : listeners) {</span>
+<span class="fc" id="L158">            listener.onStateChanged(this, oldState, newState);</span>
+<span class="fc" id="L159">        }</span>
+<span class="fc" id="L160">    }</span>
+
+    // =========================================================================
+    // DETECÇÃO DE GATILHOS E COLISÕES
+    // =========================================================================
+
+    public boolean checkTrigger(DamageTarget target) {
+<span class="pc bpc" id="L167" title="2 of 6 branches missed.">        if (target == null || !target.isAlive() || state != TrapState.INACTIVE) {</span>
+<span class="fc" id="L168">            return false;</span>
+        }
+
+<span class="fc" id="L171">        boolean inside = triggerBox.intersects(x, y, target.getHitbox(), target.getX(), target.getY());</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (inside) {</span>
+<span class="fc" id="L173">            onTrigger();</span>
+<span class="fc" id="L174">            return true;</span>
+        }
+<span class="fc" id="L176">        return false;</span>
+    }
+
+    public boolean checkCollision(DamageTarget target) {
+<span class="pc bpc" id="L180" title="2 of 8 branches missed.">        if (target == null || !target.isAlive() || target.isInvulnerable() || state != TrapState.ACTIVE) {</span>
+<span class="fc" id="L181">            return false;</span>
+        }
+
+<span class="fc" id="L184">        boolean hit = damageHitbox.intersects(x, y, target.getHitbox(), target.getX(), target.getY());</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (hit) {</span>
+<span class="fc" id="L186">            applyDamage(target);</span>
+<span class="fc" id="L187">            return true;</span>
+        }
+<span class="fc" id="L189">        return false;</span>
+    }
+
+    public void applyDamage(DamageTarget target) {
+<span class="pc bpc" id="L193" title="3 of 6 branches missed.">        if (target == null || !target.isAlive() || target.isInvulnerable()) {</span>
+<span class="nc" id="L194">            return;</span>
+        }
+
+<span class="fc" id="L197">        target.takeDamage(damage, this);</span>
+
+<span class="fc" id="L199">        double trapCenterX = x + damageHitbox.getOffsetX() + (damageHitbox.getWidth() / 2.0);</span>
+<span class="fc" id="L200">        double targetCenterX = target.getX() + target.getHitbox().getOffsetX() + (target.getHitbox().getWidth() / 2.0);</span>
+
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        double forceX = (targetCenterX &gt;= trapCenterX) ? knockbackForce : -knockbackForce;</span>
+<span class="fc" id="L203">        double forceY = -Math.abs(knockbackForce * 0.75);</span>
+
+<span class="fc" id="L205">        target.applyKnockback(forceX, forceY);</span>
+<span class="fc" id="L206">        target.activateInvulnerability(invulnerabilityGrantDuration);</span>
+
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        for (TrapListener listener : listeners) {</span>
+<span class="fc" id="L209">            listener.onDamageDealt(this, target, damage);</span>
+<span class="fc" id="L210">        }</span>
+<span class="fc" id="L211">    }</span>
+
+    // =========================================================================
+    // RENDERIZAÇÃO AWT (Java Puro) E GAME JUICE
+    // =========================================================================
+
+    public void render(Graphics g) {
+<span class="nc" id="L218">        double drawX = x + shakeOffsetX;</span>
+<span class="nc" id="L219">        double drawY = y + shakeOffsetY;</span>
+
+<span class="nc" id="L221">        renderContent(g, drawX, drawY);</span>
+
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        if (state == TrapState.TELEGRAPHING) {</span>
+<span class="nc" id="L224">            renderTelegraphEffect(g, drawX, drawY);</span>
+        }
+
+<span class="nc bnc" id="L227" title="All 4 branches missed.">        if (debugHitboxes &amp;&amp; g instanceof Graphics2D g2d) {</span>
+<span class="nc" id="L228">            renderDebugBounds(g2d);</span>
+        }
+<span class="nc" id="L230">    }</span>
+
+    protected abstract void renderContent(Graphics g, double drawX, double drawY);
+
+    protected void renderTelegraphEffect(Graphics g, double drawX, double drawY) {
+<span class="nc" id="L235">        Color originalColor = g.getColor();</span>
+<span class="nc" id="L236">        float pulse = (float) (Math.abs(Math.sin(stateTimer * 10.0)) * 0.4 + 0.2);</span>
+<span class="nc" id="L237">        g.setColor(new Color(1.0f, 0.2f, 0.2f, pulse));</span>
+<span class="nc" id="L238">        g.fillRect((int) drawX, (int) drawY, (int) width, (int) height);</span>
+<span class="nc" id="L239">        g.setColor(originalColor);</span>
+<span class="nc" id="L240">    }</span>
+
+    protected void renderDebugBounds(Graphics2D g2d) {
+<span class="nc" id="L243">        Color prev = g2d.getColor();</span>
+
+<span class="nc" id="L245">        g2d.setColor(new Color(255, 215, 0, 140));</span>
+<span class="nc" id="L246">        g2d.drawRect((int) triggerBox.getMinX(x), (int) triggerBox.getMinY(y),</span>
+<span class="nc" id="L247">                (int) triggerBox.getWidth(), (int) triggerBox.getHeight());</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        g2d.setColor(state == TrapState.ACTIVE ? new Color(255, 0, 0, 200) : new Color(255, 100, 100, 80));</span>
+<span class="nc" id="L250">        g2d.drawRect((int) damageHitbox.getMinX(x), (int) damageHitbox.getMinY(y),</span>
+<span class="nc" id="L251">                (int) damageHitbox.getWidth(), (int) damageHitbox.getHeight());</span>
+
+<span class="nc" id="L253">        g2d.setColor(prev);</span>
+<span class="nc" id="L254">    }</span>
+
+<span class="nc" id="L256">    protected void updateCustom(double deltaTime) {}</span>
+
+    // =========================================================================
+    // OBSERVER / LISTENERS
+    // =========================================================================
+
+    public void addListener(TrapListener listener) {
+<span class="pc bpc" id="L263" title="2 of 4 branches missed.">        if (listener != null &amp;&amp; !listeners.contains(listener)) {</span>
+<span class="fc" id="L264">            listeners.add(listener);</span>
+        }
+<span class="fc" id="L266">    }</span>
+
+    public void removeListener(TrapListener listener) {
+<span class="nc" id="L269">        listeners.remove(listener);</span>
+<span class="nc" id="L270">    }</span>
+
+    protected void notifyTelegraphStarted(double duration) {
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        for (TrapListener listener : listeners) {</span>
+<span class="fc" id="L274">            listener.onTelegraphStarted(this, duration);</span>
+<span class="fc" id="L275">        }</span>
+<span class="fc" id="L276">    }</span>
+
+    protected void notifyTriggered() {
+<span class="fc bfc" id="L279" title="All 2 branches covered.">        for (TrapListener listener : listeners) {</span>
+<span class="fc" id="L280">            listener.onTriggered(this);</span>
+<span class="fc" id="L281">        }</span>
+<span class="fc" id="L282">    }</span>
+
+    protected void notifyImpact() {
+<span class="fc bfc" id="L285" title="All 2 branches covered.">        for (TrapListener listener : listeners) {</span>
+<span class="fc" id="L286">            listener.onImpact(this);</span>
+<span class="fc" id="L287">        }</span>
+<span class="fc" id="L288">    }</span>
+
+    // =========================================================================
+    // GETTERS E SETTERS
+    // =========================================================================
+
+    public double getInvulnerabilityGrantDuration() {
+<span class="nc" id="L295">        return invulnerabilityGrantDuration;</span>
+    }
+
+    public void setInvulnerabilityGrantDuration(double invulnerabilityGrantDuration) {
+<span class="nc" id="L299">        this.invulnerabilityGrantDuration = Math.max(0.0, invulnerabilityGrantDuration);</span>
+<span class="nc" id="L300">    }</span>
+
+    @Override
+    public int getDamage() {
+<span class="fc" id="L304">        return damage;</span>
+    }
+
+    public void setDamage(int damage) {
+<span class="fc" id="L308">        this.damage = damage;</span>
+<span class="fc" id="L309">    }</span>
+
+    @Override
+    public double getKnockbackForce() {
+<span class="nc" id="L313">        return knockbackForce;</span>
+    }
+
+    public void setKnockbackForce(double knockbackForce) {
+<span class="nc" id="L317">        this.knockbackForce = knockbackForce;</span>
+<span class="nc" id="L318">    }</span>
+
+    @Override
+    public String getName() {
+<span class="fc" id="L322">        return name;</span>
+    }
+
+    public double getX() {
+<span class="fc" id="L326">        return x;</span>
+    }
+
+    public void setX(double x) {
+<span class="nc" id="L330">        this.x = x;</span>
+<span class="nc" id="L331">    }</span>
+
+    public double getY() {
+<span class="fc" id="L334">        return y;</span>
+    }
+
+    public void setY(double y) {
+<span class="nc" id="L338">        this.y = y;</span>
+<span class="nc" id="L339">    }</span>
+
+    public double getWidth() {
+<span class="fc" id="L342">        return width;</span>
+    }
+
+    public double getHeight() {
+<span class="nc" id="L346">        return height;</span>
+    }
+
+    public Hitbox getDamageHitbox() {
+<span class="fc" id="L350">        return damageHitbox;</span>
+    }
+
+    public void setDamageHitbox(Hitbox damageHitbox) {
+<span class="nc" id="L354">        this.damageHitbox = damageHitbox;</span>
+<span class="nc" id="L355">    }</span>
+
+    public Hitbox getTriggerBox() {
+<span class="nc" id="L358">        return triggerBox;</span>
+    }
+
+    public void setTriggerBox(Hitbox triggerBox) {
+<span class="nc" id="L362">        this.triggerBox = triggerBox;</span>
+<span class="nc" id="L363">    }</span>
+
+    public TrapState getState() {
+<span class="fc" id="L366">        return state;</span>
+    }
+
+    public double getStateTimer() {
+<span class="nc" id="L370">        return stateTimer;</span>
+    }
+
+    public double getInactiveDuration() {
+<span class="nc" id="L374">        return inactiveDuration;</span>
+    }
+
+    public void setInactiveDuration(double inactiveDuration) {
+<span class="nc" id="L378">        this.inactiveDuration = inactiveDuration;</span>
+<span class="nc" id="L379">    }</span>
+
+    public double getTelegraphDuration() {
+<span class="fc" id="L382">        return telegraphDuration;</span>
+    }
+
+    public void setTelegraphDuration(double telegraphDuration) {
+<span class="nc" id="L386">        this.telegraphDuration = telegraphDuration;</span>
+<span class="nc" id="L387">    }</span>
+
+    public double getActiveDuration() {
+<span class="nc" id="L390">        return activeDuration;</span>
+    }
+
+    public void setActiveDuration(double activeDuration) {
+<span class="nc" id="L394">        this.activeDuration = activeDuration;</span>
+<span class="nc" id="L395">    }</span>
+
+    public double getCooldownDuration() {
+<span class="nc" id="L398">        return cooldownDuration;</span>
+    }
+
+    public void setCooldownDuration(double cooldownDuration) {
+<span class="nc" id="L402">        this.cooldownDuration = cooldownDuration;</span>
+<span class="nc" id="L403">    }</span>
+
+    public boolean isDebugHitboxes() {
+<span class="nc" id="L406">        return debugHitboxes;</span>
+    }
+
+    public void setDebugHitboxes(boolean debugHitboxes) {
+<span class="nc" id="L410">        this.debugHitboxes = debugHitboxes;</span>
+<span class="nc" id="L411">    }</span>
+
+    public double getShakeOffsetX() {
+<span class="fc" id="L414">        return shakeOffsetX;</span>
+    }
+
+    public double getShakeOffsetY() {
+<span class="fc" id="L418">        return shakeOffsetY;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L423">        return String.format(&quot;%s [pos=(%.0f, %.0f), tam=%.0fx%.0f, estado=%s, dano=%d]&quot;,</span>
+<span class="fc" id="L424">                name, x, y, width, height, state, damage);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

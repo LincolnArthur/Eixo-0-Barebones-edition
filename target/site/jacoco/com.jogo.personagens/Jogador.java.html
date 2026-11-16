@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Jogador.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">Jogador.java</span></div><h1>Jogador.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import com.jogo.habilidades.BuracoNegro;
+import com.jogo.habilidades.RaioDeGelo;
+import com.jogo.combate.Arma;
+import com.jogo.combate.Atacante;
+import com.jogo.combate.Ataque;
+import com.jogo.excecoes.ItemIncompativelException;
+import com.jogo.excecoes.ItemNaoEncontradoException;
+import com.jogo.inventario.Consumivel;
+import com.jogo.inventario.Inventariavel;
+import com.jogo.inventario.Inventario;
+
+public class Jogador extends Personagem implements Atacante {
+    //Implementa o metodo de ataque por meio
+    //da classe abstrata Arma -lincoln
+    private Arma arma;
+    private int energiaAtual;
+    private int energiaMaxima;
+    private Nivel nivel;
+    //private List&lt;Habilidade&gt; habilidades;
+    
+    private final Inventario inventario; //cada jogador tem seu inventario
+
+    //Magias liberadas por nível (nascem não aprendidas; subir de nível
+    //libera), iguais às do FXGL. Gelo: 20 de energia, dano 8, congela 3
+    //turnos, espera 3. Buraco Negro: toda a energia, espera 20.
+    public static final int NIVEL_GELO = 2;
+    public static final int NIVEL_BURACO_NEGRO = 3;
+<span class="fc" id="L30">    private final RaioDeGelo gelo = new RaioDeGelo(false, 3.0, 20, 8, 3.0);</span>
+<span class="fc" id="L31">    private final BuracoNegro buracoNegro = new BuracoNegro(false, 20.0);</span>
+
+    //Energia: até o nível 6 ela NÃO recarrega sozinha; só volta acertando
+    //inimigos (ENERGIA_POR_ACERTO por acerto) ou com Módulo de Energia. A
+    //partir do nível 6 também recarrega RECARGA_POR_TURNO por turno.
+    public static final int NIVEL_RECARGA_AUTOMATICA = 6;
+    public static final int ENERGIA_POR_ACERTO = 3;
+    public static final int RECARGA_POR_TURNO = 1;
+    //Ao subir de nível: +20 de vida máxima e vida cheia
+    public static final int VIDA_POR_NIVEL = 20;
+
+<span class="fc" id="L42">    private Dificuldade dificuldade = Dificuldade.NORMAL;</span>
+
+    public Jogador(String nome, int vidaMaxima, Arma arma, int energiaMaxima) {
+<span class="fc" id="L45">        super(nome, vidaMaxima);</span>
+
+<span class="fc" id="L47">        this.energiaAtual= energiaMaxima; //Criei 'energia' para funcionar como a mana -Raioni</span>
+<span class="fc" id="L48">        this.energiaMaxima = energiaMaxima; </span>
+<span class="fc" id="L49">        this.arma = arma;</span>
+<span class="fc" id="L50">        this.nivel = new Nivel(); //Nivel n tava sendo inicializado antes ai ficava NULL</span>
+
+<span class="fc" id="L52">        this.inventario= new Inventario(); //Vou criar minha classe Inventario que guarda os itens - raioni</span>
+<span class="fc" id="L53">        this.inventario.adicionar(arma); //COloquei minha arma inicial no inventario - raioni</span>
+<span class="fc" id="L54">    }</span>
+    
+
+    public int getEnergiaAtual(){ //manda a energia atual do meu personagem -Raioni
+<span class="fc" id="L58">        return this.energiaAtual;</span>
+    }
+    //Substitui o antigo setEnergiaAtual: mesma ideia do curar() do
+    //Personagem, o Jogador garante que a energia não passa da máxima.
+    public void recuperarEnergia(int quantidade){
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if(quantidade &lt;= 0){</span>
+<span class="fc" id="L64">            return;</span>
+        }
+<span class="fc" id="L66">        this.energiaAtual = Math.min(energiaMaxima, energiaAtual + quantidade);</span>
+<span class="fc" id="L67">    }</span>
+    public boolean energiaSuficiente(int custoEnergia){ // retorna se tenho energia suficiente pra aquilo -Raioni
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if(this.energiaAtual &gt;= custoEnergia){</span>
+<span class="fc" id="L70">            return true;</span>
+        }else{
+<span class="fc" id="L72">            return false;</span>
+        }
+    }
+    public void consumirEnergia(int custoEnergia){ //Calcula a energia restante apos usar uma habilidade -Raioni
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if(energiaAtual &lt;= 0){</span>
+<span class="nc" id="L77">            return;</span>
+        }
+<span class="fc" id="L79">        this.energiaAtual= Math.max(0,energiaAtual - custoEnergia);</span>
+<span class="fc" id="L80">    }</span>
+
+    //Devolve true se subiu de nível (um ou mais). A cada nível novo:
+    //+20 de vida máxima, vida cheia e libera as magias do nível
+    public boolean ganharExperiencia(int quantidade) {
+<span class="fc" id="L85">        int nivelAntes = nivel.getNivelAtual();</span>
+<span class="fc" id="L86">        boolean subiuNivel = nivel.ganharExperiencia(quantidade);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (subiuNivel) {</span>
+<span class="fc" id="L88">            aumentarVidaMaxima(VIDA_POR_NIVEL * (nivel.getNivelAtual() - nivelAntes));</span>
+<span class="fc" id="L89">            curar(getVidaMaxima());</span>
+<span class="fc" id="L90">            liberarMagias();</span>
+        }
+<span class="fc" id="L92">        return subiuNivel;</span>
+    }
+
+    private void liberarMagias() {
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (nivel.getNivelAtual() &gt;= NIVEL_GELO) {</span>
+<span class="fc" id="L97">            gelo.setAprendida(true);</span>
+        }
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (nivel.getNivelAtual() &gt;= NIVEL_BURACO_NEGRO) {</span>
+<span class="fc" id="L100">            buracoNegro.setAprendida(true);</span>
+        }
+<span class="fc" id="L102">    }</span>
+
+    //=== Energia por acerto e recarga a partir do nível 6 ===
+
+    //Chamado pelo controle quando um ataque do jogador acerta um inimigo
+    public void registrarAcerto() {
+<span class="fc" id="L108">        recuperarEnergia(ENERGIA_POR_ACERTO);</span>
+<span class="fc" id="L109">    }</span>
+
+    public boolean recargaAutomaticaLiberada() {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        return nivel.getNivelAtual() &gt;= NIVEL_RECARGA_AUTOMATICA;</span>
+    }
+
+    //Chamado pelo controle a cada turno; só faz algo a partir do nível 6
+    public void recarregarEnergiaPorTurno() {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (recargaAutomaticaLiberada()) {</span>
+<span class="fc" id="L118">            recuperarEnergia(RECARGA_POR_TURNO);</span>
+        }
+<span class="fc" id="L120">    }</span>
+
+    //=== Dificuldade ===
+
+    //Sobrescreve o tomarDano() do Personagem: aplica a dificuldade e
+    //deixa o resto (invencibilidade, vida não negativa) com a mãe
+    @Override
+    public void tomarDano(int quantidade) {
+<span class="fc" id="L128">        super.tomarDano(dificuldade.aplicar(quantidade));</span>
+<span class="fc" id="L129">    }</span>
+
+    public Dificuldade getDificuldade() {
+<span class="fc" id="L132">        return dificuldade;</span>
+    }
+
+    public void setDificuldade(Dificuldade dificuldade) {
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (dificuldade == null) {</span>
+<span class="fc" id="L137">            throw new IllegalArgumentException(&quot;Dificuldade não pode ser nula&quot;);</span>
+        }
+<span class="fc" id="L139">        this.dificuldade = dificuldade;</span>
+<span class="fc" id="L140">    }</span>
+
+    public RaioDeGelo getGelo() {
+<span class="fc" id="L143">        return gelo;</span>
+    }
+
+    public BuracoNegro getBuracoNegro() {
+<span class="fc" id="L147">        return buracoNegro;</span>
+    }
+
+    public int getEnergiaMaxima() {
+<span class="fc" id="L151">        return this.energiaMaxima;</span>
+    }
+
+    //Causa dano por meio da arma, não de um danoBase definido
+    @Override  
+    public void iniciarAtaque(Personagem vitima) {
+<span class="fc" id="L157">        Ataque ataque = new Ataque(arma.causarDano(vitima));</span>
+<span class="fc" id="L158">        ataque.aplicarEm(vitima);</span>
+<span class="fc" id="L159">    }</span>
+
+    //Antes devolvia false quando dava errado, e quem chamava não sabia
+    //o motivo. Agora lança uma exceção diferente pra cada problema: o
+    //id não existe, ou existe mas não é uma arma
+    public void equiparArma(String idArma) throws ItemNaoEncontradoException, ItemIncompativelException {
+<span class="fc" id="L165">        Inventariavel objeto = inventario.buscar(idArma);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (objeto == null) {</span>
+<span class="fc" id="L167">            throw new ItemNaoEncontradoException(idArma);</span>
+        }
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (!(objeto instanceof Arma armaEncontrada)) {</span>
+<span class="fc" id="L170">            throw new ItemIncompativelException(idArma, &quot;equipar como arma&quot;);</span>
+        }
+<span class="fc" id="L172">        this.arma = armaEncontrada;</span>
+<span class="fc" id="L173">    }</span>
+
+    //Usa um consumível do inventário pelo id (ex: Módulo de Cura) e
+    //tira uma unidade dele. Mesmo esquema de exceções do equiparArma()
+    public void usarItem(String id) throws ItemNaoEncontradoException, ItemIncompativelException {
+<span class="fc" id="L178">        Inventariavel objeto = inventario.buscar(id);</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (objeto == null) {</span>
+<span class="fc" id="L180">            throw new ItemNaoEncontradoException(id);</span>
+        }
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        if (!(objeto instanceof Consumivel consumivel)) {</span>
+<span class="fc" id="L183">            throw new ItemIncompativelException(id, &quot;consumir&quot;);</span>
+        }
+<span class="fc" id="L185">        consumivel.efeito(this);</span>
+<span class="fc" id="L186">        inventario.remover(id);</span>
+<span class="fc" id="L187">    }</span>
+
+    public boolean coletarItem(Inventariavel item) {
+<span class="fc" id="L190">        return inventario.adicionar(item);</span>
+    }
+
+    public Arma getArma() {
+<span class="fc" id="L194">        return arma;</span>
+    }
+
+    public Nivel getNivel() {
+<span class="fc" id="L198">        return nivel;</span>
+    }
+
+    public Inventario getInventario() {
+<span class="fc" id="L202">        return inventario;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrapState.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.armadilhas</a> &gt; <span class="el_source">TrapState.java</span></div><h1>TrapState.java</h1><pre class="source lang-java linenums">package com.jogo.armadilhas;
+
+/**
+ * Estados do ciclo de vida de uma armadilha.
+ *
+ * Inclui o estado explícito TELEGRAPHING para feedback visual e sonoro antecipado
+ * (Game Juice), essencial para o gameplay justo e fluido em jogos de plataforma.
+ */
+<span class="fc" id="L9">public enum TrapState {</span>
+
+    /**
+     * Armadilha em repouso / desarmada / recolhida, aguardando ativação por tempo ou gatilho.
+     */
+<span class="fc" id="L14">    INACTIVE,</span>
+
+    /**
+     * Gatilho físico ou de proximidade foi detectado. Transiciona imediatamente para TELEGRAPHING.
+     */
+<span class="fc" id="L19">    TRIGGERED,</span>
+
+    /**
+     * Fase de alerta visual e sonoro (tremor, brilho, indicador, estalo mecânico).
+     * O jogador tem uma janela de tempo para reagir antes de o dano se tornar ativo.
+     */
+<span class="fc" id="L25">    TELEGRAPHING,</span>
+
+    /**
+     * Fase letal ativa. A hitbox de dano está ligada e causa ferimento/empurrão ao contato.
+     */
+<span class="fc" id="L30">    ACTIVE,</span>
+
+    /**
+     * Período de resfriamento / rearme / retorno à posição inicial após o disparo.
+     */
+<span class="fc" id="L35">    COOLDOWN</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

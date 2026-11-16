@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NpcsDasSalas.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.mundo</a> &gt; <span class="el_source">NpcsDasSalas.java</span></div><h1>NpcsDasSalas.java</h1><pre class="source lang-java linenums">package com.jogo.mundo;
+
+import com.jogo.personagens.NpcCurandeiro;
+import com.jogo.personagens.NpcInformante;
+
+import java.util.ArrayList;
+import java.util.List;
+
+//Um lugar só com a regra de onde ficam os NPCs, igual ao NpcsDasSalas do FXGL:
+// - o Informante só na PRIMEIRA sala, dando as dicas do começo;
+// - a Curandeira só na PENÚLTIMA sala, antes da arena do chefe.
+//O próprio chefe começa como NPC (NpcChefe), mas quem o coloca é quem
+//monta a arena, junto com a luta.
+public final class NpcsDasSalas {
+
+    private NpcsDasSalas() {
+    }
+
+    public static boolean temInformante(int indiceSala) {
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        return indiceSala == 0;</span>
+    }
+
+    public static boolean temCurandeira(int indiceSala, int totalSalas) {
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        return indiceSala == totalSalas - 2;</span>
+    }
+
+    //Percorre as salas na ordem em que foram adicionadas ao mapa
+    public static void colocarNpcs(Mapa mapa) {
+<span class="fc" id="L29">        List&lt;Sala&gt; salas = new ArrayList&lt;&gt;(mapa.getSalas().values());</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        for (int i = 0; i &lt; salas.size(); i++) {</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">            if (temInformante(i)) {</span>
+<span class="fc" id="L32">                salas.get(i).adicionarNpc(new NpcInformante(&quot;Informante&quot;, List.of(</span>
+                        &quot;Olá! Há armas e módulos espalhados pelas salas.&quot;,
+                        &quot;Acertar inimigos devolve energia. Sozinha, ela só recarrega a partir do nível 6.&quot;,
+                        &quot;Cuidado com os espinhos e as prensas do caminho.&quot;,
+                        &quot;Antes do chefe há uma curandeira. Aperte Enter pra passar as falas.&quot;)));
+            }
+<span class="fc bfc" id="L38" title="All 2 branches covered.">            if (temCurandeira(i, salas.size())) {</span>
+<span class="fc" id="L39">                salas.get(i).adicionarNpc(new NpcCurandeiro(&quot;Curandeira&quot;, List.of(</span>
+                        &quot;Fique perto que eu cuido dos seus ferimentos.&quot;,
+                        &quot;Mas cada cura custa &quot; + NpcCurandeiro.CUSTO_ENERGIA_PADRAO + &quot; da sua energia.&quot;,
+                        &quot;O NEXUS espera depois daquela porta. Tenho &quot; + NpcCurandeiro.CURAS_PADRAO + &quot; curas, use bem.&quot;),
+                        NpcCurandeiro.CURAS_PADRAO));
+            }
+        }
+<span class="fc" id="L46">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

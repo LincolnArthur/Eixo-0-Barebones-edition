@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RifleSniper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.combate</a> &gt; <span class="el_source">RifleSniper.java</span></div><h1>RifleSniper.java</h1><pre class="source lang-java linenums">package com.jogo.combate;
+
+import java.util.List;
+
+import com.jogo.personagens.Personagem;
+
+// Arma de fogo de precisão: um único disparo de dano alto.
+// Implementa Perfurante: o tiro atravessa e acerta mais de um alvo
+// na linha de tiro (a ordem da lista, já que não tem engine).
+public class RifleSniper extends ArmaDeFogo implements Perfurante {
+    private int alvosAtravessados;
+
+    public RifleSniper(String id, String nome, String descricao, int dano, double chanceCritico, int alvosAtravessados) {
+<span class="fc" id="L14">        super(id, nome, descricao, dano, chanceCritico);</span>
+<span class="fc" id="L15">        this.alvosAtravessados = alvosAtravessados;</span>
+<span class="fc" id="L16">    }</span>
+
+    @Override
+    public int getAlvosAtravessados() {
+<span class="fc" id="L20">        return alvosAtravessados;</span>
+    }
+
+    // causarDano() já sorteia o crítico (vem de Arma); o mesmo dano
+    // vale pra todos os alvos que o tiro atravessar
+    public void disparar(List&lt;Personagem&gt; alvos) {
+<span class="fc" id="L26">        new Projetil(causarDano()).atingir(alvos, alvosAtravessados);</span>
+<span class="fc" id="L27">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

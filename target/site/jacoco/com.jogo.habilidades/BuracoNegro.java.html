@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BuracoNegro.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.habilidades</a> &gt; <span class="el_source">BuracoNegro.java</span></div><h1>BuracoNegro.java</h1><pre class="source lang-java linenums">package com.jogo.habilidades;
+
+import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Personagem;
+
+import java.util.List;
+
+//Magia final, liberada no nível 3. Gasta TODA a energia (só dá pra usar
+//com a barra cheia) e atinge todos os inimigos da sala de uma vez: cada
+//um toma dano igual à vida que tem, ou seja, morre. Quem quiser resistir
+//sobrescreve Inimigo.danoDeBuracoNegro() (o chefe só perde 25%).
+public class BuracoNegro extends Habilidade {
+
+    //Quem está na sala no momento do uso (o controle avisa com mirar())
+<span class="fc" id="L16">    private List&lt;? extends Personagem&gt; alvos = List.of();</span>
+
+    public BuracoNegro(boolean aprendida, double tempoEspera) {
+<span class="fc" id="L19">        super(aprendida, tempoEspera, 0, 0.0);</span>
+<span class="fc" id="L20">    }</span>
+
+    //Sobrescreve o custo fixo: custa a energia máxima inteira
+    @Override
+    public int custoPara(Jogador player) {
+<span class="fc" id="L25">        return player.getEnergiaMaxima();</span>
+    }
+
+    //Diz quem está na sala antes de usar (ex.: Batalha.usarBuracoNegro)
+    public void mirar(List&lt;? extends Personagem&gt; alvosDaSala) {
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        this.alvos = alvosDaSala == null ? List.of() : List.copyOf(alvosDaSala);</span>
+<span class="fc" id="L31">    }</span>
+
+    @Override
+    public void executar(Jogador usuario, Personagem alvo) {
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        for (Personagem p : alvos) {</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">            if (!p.estaMorto()) {</span>
+<span class="fc" id="L37">                p.tomarDano(danoPara(p));</span>
+            }
+<span class="fc" id="L39">        }</span>
+<span class="pc bpc" id="L40" title="5 of 6 branches missed.">        if (alvo != null &amp;&amp; !alvos.contains(alvo) &amp;&amp; !alvo.estaMorto()) {</span>
+<span class="nc" id="L41">            alvo.tomarDano(danoPara(alvo));</span>
+        }
+<span class="fc" id="L43">        alvos = List.of(); //cada uso precisa mirar de novo</span>
+<span class="fc" id="L44">    }</span>
+
+    //Polimorfismo: cada inimigo diz quanto o buraco negro tira dele
+    private int danoPara(Personagem p) {
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        return p instanceof Inimigo inimigo ? inimigo.danoDeBuracoNegro() : p.getVidaAtual();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

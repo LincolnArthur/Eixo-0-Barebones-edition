@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sala.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.mundo</a> &gt; <span class="el_source">Sala.java</span></div><h1>Sala.java</h1><pre class="source lang-java linenums">package com.jogo.mundo;
+
+import com.jogo.armadilhas.DamageTarget;
+import com.jogo.armadilhas.Trap;
+import com.jogo.inventario.Inventariavel;
+import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Npc;
+import com.jogo.personagens.Personagem;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+// Representa uma sala ou câmara no mapa do Metroidvania.
+// Em vez de fases lineares, o jogo usa salas conectadas em um Grafo.
+public class Sala {
+
+    private final String id;
+    private final String nome;
+    private final String descricao;
+
+    // Conexões com outras salas (ex: &quot;norte&quot;, &quot;sul&quot;, &quot;leste&quot;, &quot;oeste&quot;)
+    // Usa LinkedHashMap para manter a ordem em que as saídas foram cadastradas
+    private final Map&lt;String, Sala&gt; saidas;
+
+    // Entidades, itens e armadilhas contidos nesta sala
+    private final List&lt;Inimigo&gt; inimigos;
+    private final List&lt;Inventariavel&gt; itens;
+    private final List&lt;Trap&gt; armadilhas;
+    // NPCs amigáveis que ficam nesta sala (ver NpcsDasSalas)
+    private final List&lt;Npc&gt; npcs;
+
+    // Se é um ponto de salvamento/descanso (ex: banco de descanso)
+    private boolean pontoDeSalvamento;
+
+<span class="fc" id="L38">    public Sala(String id, String nome, String descricao) {</span>
+<span class="fc" id="L39">        this.id = id;</span>
+<span class="fc" id="L40">        this.nome = nome;</span>
+<span class="fc" id="L41">        this.descricao = descricao;</span>
+<span class="fc" id="L42">        this.saidas = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L43">        this.inimigos = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L44">        this.itens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L45">        this.armadilhas = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L46">        this.npcs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L47">        this.pontoDeSalvamento = false;</span>
+<span class="fc" id="L48">    }</span>
+
+    public String getId() {
+<span class="fc" id="L51">        return id;</span>
+    }
+
+    public String getNome() {
+<span class="fc" id="L55">        return nome;</span>
+    }
+
+    public String getDescricao() {
+<span class="fc" id="L59">        return descricao;</span>
+    }
+
+    public boolean isPontoDeSalvamento() {
+<span class="fc" id="L63">        return pontoDeSalvamento;</span>
+    }
+
+    public void setPontoDeSalvamento(boolean pontoDeSalvamento) {
+<span class="nc" id="L67">        this.pontoDeSalvamento = pontoDeSalvamento;</span>
+<span class="nc" id="L68">    }</span>
+
+    // Conecta uma saída desta sala para outra (unidirecional)
+    public void conectar(String direcao, Sala destino) {
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">        if (direcao != null &amp;&amp; destino != null) {</span>
+<span class="fc" id="L73">            saidas.put(direcao.toLowerCase(), destino);</span>
+        }
+<span class="fc" id="L75">    }</span>
+
+    // Conecta duas salas em ambos os sentidos (ida e volta)
+    public void conectarBidirecional(String direcaoIda, String direcaoVolta, Sala destino) {
+<span class="fc" id="L79">        this.conectar(direcaoIda, destino);</span>
+<span class="fc" id="L80">        destino.conectar(direcaoVolta, this);</span>
+<span class="fc" id="L81">    }</span>
+
+    public Sala getSaida(String direcao) {
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (direcao == null) return null;</span>
+<span class="fc" id="L85">        return saidas.get(direcao.toLowerCase());</span>
+    }
+
+    public Map&lt;String, Sala&gt; getSaidas() {
+<span class="fc" id="L89">        return Collections.unmodifiableMap(saidas);</span>
+    }
+
+    public void adicionarInimigo(Inimigo inimigo) {
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (inimigo != null) {</span>
+<span class="fc" id="L94">            inimigos.add(inimigo);</span>
+        }
+<span class="fc" id="L96">    }</span>
+
+    public List&lt;Inimigo&gt; getInimigos() {
+<span class="fc" id="L99">        return Collections.unmodifiableList(inimigos);</span>
+    }
+
+    public void adicionarNpc(Npc npc) {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (npc != null) {</span>
+<span class="fc" id="L104">            npcs.add(npc);</span>
+        }
+<span class="fc" id="L106">    }</span>
+
+    public List&lt;Npc&gt; getNpcs() {
+<span class="fc" id="L109">        return Collections.unmodifiableList(npcs);</span>
+    }
+
+    public void adicionarItem(Inventariavel item) {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (item != null) {</span>
+<span class="fc" id="L114">            itens.add(item);</span>
+        }
+<span class="fc" id="L116">    }</span>
+
+    public List&lt;Inventariavel&gt; getItens() {
+<span class="fc" id="L119">        return Collections.unmodifiableList(itens);</span>
+    }
+
+    public void adicionarArmadilha(Trap armadilha) {
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (armadilha != null) {</span>
+<span class="fc" id="L124">            armadilhas.add(armadilha);</span>
+        }
+<span class="fc" id="L126">    }</span>
+
+    public void adicionarArmadilhas(List&lt;Trap&gt; novasArmadilhas) {
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (novasArmadilhas != null) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            for (Trap t : novasArmadilhas) {</span>
+<span class="fc" id="L131">                adicionarArmadilha(t);</span>
+<span class="fc" id="L132">            }</span>
+        }
+<span class="fc" id="L134">    }</span>
+
+    public List&lt;Trap&gt; getArmadilhas() {
+<span class="nc" id="L137">        return Collections.unmodifiableList(armadilhas);</span>
+    }
+
+    /**
+     * Atualiza polimorficamente todas as armadilhas da sala (máquina de estados,
+     * temporizadores, gatilho de proximidade e colisão de dano contra o alvo).
+     */
+    public void atualizarArmadilhas(double deltaTime, DamageTarget alvo) {
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (alvo instanceof Personagem p) {</span>
+<span class="fc" id="L146">            p.atualizar(deltaTime);</span>
+        }
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for (Trap armadilha : armadilhas) {</span>
+<span class="fc" id="L149">            armadilha.update(deltaTime);</span>
+<span class="pc bpc" id="L150" title="2 of 4 branches missed.">            if (alvo != null &amp;&amp; alvo.isAlive()) {</span>
+<span class="fc" id="L151">                armadilha.checkTrigger(alvo);</span>
+<span class="fc" id="L152">                armadilha.checkCollision(alvo);</span>
+            }
+<span class="fc" id="L154">        }</span>
+<span class="fc" id="L155">    }</span>
+
+    //O antigo descrever(), que imprimia a sala, foi pra visão
+    //(TelaConsole.mostrarSala): a sala só guarda dados.
+    //Mantido como utilitário de inspeção rápida e demonstração das armadilhas.
+    public void descrever() {
+<span class="fc" id="L161">        System.out.println(&quot;========== &quot; + nome.toUpperCase() + &quot; ==========&quot;);</span>
+<span class="fc" id="L162">        System.out.println(descricao);</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (pontoDeSalvamento) {</span>
+<span class="nc" id="L164">            System.out.println(&quot;[*] Ponto de Salvamento/Descanso disponível aqui!&quot;);</span>
+        }
+
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (!itens.isEmpty()) {</span>
+<span class="nc" id="L168">            System.out.print(&quot;Itens na sala: &quot;);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            for (Inventariavel item : itens) {</span>
+<span class="nc" id="L170">                System.out.print(&quot;[&quot; + item.getNome() + &quot;] &quot;);</span>
+<span class="nc" id="L171">            }</span>
+<span class="nc" id="L172">            System.out.println();</span>
+        }
+
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">        if (!inimigos.isEmpty()) {</span>
+<span class="nc" id="L176">            System.out.print(&quot;Inimigos: &quot;);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            for (Inimigo ini : inimigos) {</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                String status = ini.estaMorto() ? &quot;(Derrotado)&quot; : &quot;(Vivo)&quot;;</span>
+<span class="nc" id="L179">                System.out.print(&quot;[&quot; + ini.getNome() + &quot; &quot; + status + &quot;] &quot;);</span>
+<span class="nc" id="L180">            }</span>
+<span class="nc" id="L181">            System.out.println();</span>
+        }
+
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">        if (!armadilhas.isEmpty()) {</span>
+<span class="fc" id="L185">            System.out.println(&quot;Armadilhas na sala (&quot; + armadilhas.size() + &quot;):&quot;);</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            for (Trap trap : armadilhas) {</span>
+<span class="fc" id="L187">                System.out.println(&quot;  - &quot; + trap);</span>
+<span class="fc" id="L188">            }</span>
+        }
+
+<span class="fc" id="L191">        System.out.print(&quot;Saídas: &quot;);</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        for (Map.Entry&lt;String, Sala&gt; s : saidas.entrySet()) {</span>
+<span class="nc" id="L193">            System.out.print(&quot;[&quot; + s.getKey() + &quot; -&gt; &quot; + s.getValue().getNome() + &quot;] &quot;);</span>
+<span class="nc" id="L194">        }</span>
+<span class="fc" id="L195">        System.out.println(&quot;\n================================================&quot;);</span>
+<span class="fc" id="L196">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

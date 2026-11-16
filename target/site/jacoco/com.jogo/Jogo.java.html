@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Jogo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo</a> &gt; <span class="el_source">Jogo.java</span></div><h1>Jogo.java</h1><pre class="source lang-java linenums">package com.jogo;
+//Package diz q uma classe pertence a tal grupo lógico
+//Namespace: Evita colisão de nome entre classe de mesmo nome
+//Organização: agrupa classes relacionadas -lincoln
+
+import com.jogo.armadilhas.BlocoQueCai;
+import com.jogo.armadilhas.DamageTarget;
+import com.jogo.armadilhas.SpikesRetrateis;
+import com.jogo.armadilhas.Trap;
+import com.jogo.armadilhas.TrapFactory;
+import com.jogo.armadilhas.TrapListener;
+import com.jogo.armadilhas.TrapProceduralGenerator;
+import com.jogo.armadilhas.TrapProceduralGenerator.PlatformBounds;
+import com.jogo.armadilhas.TrapState;
+import com.jogo.combate.AdagaDupla;
+import com.jogo.combate.Arma;
+import com.jogo.combate.Espada;
+import com.jogo.combate.Marreta;
+import com.jogo.combate.Perfurante;
+import com.jogo.combate.PistolaDuplaDePlasma;
+import com.jogo.combate.RifleSniper;
+import com.jogo.combate.Sabre;
+import com.jogo.combate.Shotgun;
+import com.jogo.controle.Batalha;
+import com.jogo.controle.Dialogo;
+import com.jogo.excecoes.SalaNaoEncontradaException;
+import com.jogo.habilidades.Apara;
+import com.jogo.habilidades.BolaDeFogo;
+import com.jogo.habilidades.GolpeDeEnergia;
+import com.jogo.habilidades.SandevistanMichyle;
+import com.jogo.inventario.Categoria;
+import com.jogo.inventario.ModuloCura;
+import com.jogo.inventario.ModuloEnergia;
+import com.jogo.inventario.Inventariavel;
+import com.jogo.mundo.Mapa;
+import com.jogo.mundo.NpcsDasSalas;
+import com.jogo.mundo.Sala;
+import com.jogo.personagens.Chefe;
+import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Melee;
+import com.jogo.personagens.Npc;
+import com.jogo.personagens.NpcChefe;
+import com.jogo.personagens.NpcCurandeiro;
+import com.jogo.personagens.NpcInformante;
+import com.jogo.personagens.Personagem;
+import com.jogo.personagens.Sniper;
+import com.jogo.personagens.Voador;
+import com.jogo.visao.TelaConsole;
+
+import java.util.List;
+import java.util.Random;
+
+//Ponto de entrada. No MVC, o main só MONTA as peças: cria o modelo
+//(personagens, armas, mapa), a visão (TelaConsole) e o controle
+//(Batalha), e roda uma demonstração no formato da atividade de RPG:
+//personagens, combate e status final.
+//
+//Quase todas as armas usam chanceCritico 0.0 pra o resultado ser sempre
+//o mesmo (crítico é sorteado).
+<span class="nc" id="L61">public class Jogo {</span>
+    public static void main(String[] args) {
+<span class="fc" id="L63">        TelaConsole tela = TelaConsole.doTerminal(); //no terminal, Enter passa as falas</span>
+
+        //=== Mundo: duas salas ligadas ===
+<span class="fc" id="L66">        Mapa mapa = new Mapa(&quot;Divisão Criogênica&quot;);</span>
+<span class="fc" id="L67">        Sala laboratorio = new Sala(&quot;lab&quot;, &quot;Laboratório&quot;, &quot;Tubos de criogenia quebrados por todo lado.&quot;);</span>
+<span class="fc" id="L68">        Sala corredor = new Sala(&quot;corredor&quot;, &quot;Corredor Norte&quot;, &quot;Um corredor escuro com luzes piscando.&quot;);</span>
+<span class="fc" id="L69">        laboratorio.conectarBidirecional(&quot;norte&quot;, &quot;sul&quot;, corredor);</span>
+<span class="fc" id="L70">        mapa.adicionarSala(laboratorio);</span>
+<span class="fc" id="L71">        mapa.adicionarSala(corredor);</span>
+        try {
+<span class="nc" id="L73">            mapa.definirSalaInicial(&quot;sala-que-nao-existe&quot;);</span>
+<span class="fc" id="L74">        } catch (SalaNaoEncontradaException e) {</span>
+<span class="fc" id="L75">            tela.mostrarErro(e.getMessage()); //tratada: o jogo segue na sala padrão</span>
+<span class="nc" id="L76">        }</span>
+
+        //=== Jogador e o que ele carrega ===
+<span class="fc" id="L79">        Jogador jogador = new Jogador(&quot;Aventureiro&quot;, 100,</span>
+                new Espada(&quot;espada&quot;, &quot;Espada Longa&quot;, &quot;Arma inicial do jogador&quot;, 10, 0.0), 50);
+<span class="fc" id="L81">        jogador.coletarItem(new Marreta(&quot;marreta&quot;, &quot;Marreta&quot;, &quot;Lenta, forte contra snipers&quot;, 14, 0.0));</span>
+<span class="fc" id="L82">        jogador.coletarItem(new AdagaDupla(&quot;adaga&quot;, &quot;Adaga Dupla&quot;, &quot;Rápida, combo no 5º golpe&quot;, 6, 0.0));</span>
+<span class="fc" id="L83">        jogador.coletarItem(new Sabre(&quot;sabre&quot;, &quot;Sabre&quot;, &quot;Bônus a cada 3 golpes&quot;, 9, 0.0, 0.8));</span>
+<span class="fc" id="L84">        jogador.coletarItem(new Shotgun(&quot;shotgun&quot;, &quot;Shotgun&quot;, &quot;5 balins&quot;, 4, 5, 0.0));</span>
+<span class="fc" id="L85">        jogador.coletarItem(new PistolaDuplaDePlasma(&quot;pistola&quot;, &quot;Pistola Dupla de Plasma&quot;, &quot;Dois tiros&quot;, 7, 0.0));</span>
+<span class="fc" id="L86">        jogador.coletarItem(new ModuloCura(&quot;modulo_cura&quot;, &quot;Módulo de Cura&quot;, &quot;Recupera 30 de vida&quot;, Categoria.CONSUMIVEL, 30));</span>
+
+        //Lista do tipo da mãe (Inimigo) com objetos de várias filhas
+<span class="fc" id="L89">        List&lt;Inimigo&gt; inimigos = List.of(</span>
+                new Melee(&quot;Bandido&quot;, 40, 8, 0.0),
+                new Sniper(&quot;Atirador&quot;, 30, 12, 0.0),
+                new Voador(&quot;Morcego&quot;, 25, 6, 0.0));
+
+<span class="fc" id="L94">        Batalha batalha = new Batalha(jogador, inimigos, tela);</span>
+
+<span class="fc" id="L96">        tela.titulo(&quot;Sala inicial&quot;);</span>
+<span class="fc" id="L97">        tela.mostrarSala(mapa.getSalaInicial());</span>
+
+<span class="fc" id="L99">        tela.titulo(&quot;Personagens&quot;);</span>
+<span class="fc" id="L100">        tela.mostrarJogador(jogador);</span>
+<span class="fc" id="L101">        tela.mostrarPersonagens(inimigos);</span>
+
+        //=== Polimorfismo: mesma chamada, comportamento diferente ===
+        //listarDoTipo é genérico: já devolve List&lt;Arma&gt;. Pra cada arma,
+        //a mesma chamada (atacar um boneco de treino); cada classe
+        //calcula o dano do seu jeito (Shotgun soma 5 balins, Pistola
+        //soma 2 tiros, Marreta é a mais forte...)
+<span class="fc" id="L108">        tela.titulo(&quot;Arsenal (mesmo ataque, armas diferentes)&quot;);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (Arma arma : jogador.getInventario().listarDoTipo(Arma.class)) {</span>
+<span class="fc" id="L110">            Personagem boneco = new Personagem(&quot;Boneco de treino&quot;, 999);</span>
+<span class="fc" id="L111">            int vidaAntes = boneco.getVidaAtual();</span>
+<span class="fc" id="L112">            batalha.equiparArma(arma.getId());</span>
+<span class="fc" id="L113">            jogador.iniciarAtaque(boneco);</span>
+<span class="fc" id="L114">            tela.mostrarMensagem(&quot;  &quot; + arma.getNome() + &quot; tirou &quot; + (vidaAntes - boneco.getVidaAtual()));</span>
+<span class="fc" id="L115">        }</span>
+
+        //=== Combate ===
+<span class="fc" id="L118">        tela.titulo(&quot;Combate&quot;);</span>
+<span class="fc" id="L119">        batalha.equiparArma(jogador.getInventario().listarDoTipo(Marreta.class).get(0).getId());</span>
+<span class="fc" id="L120">        batalha.jogadorAtaca(inimigos.get(1));   //Marreta contra o Sniper: bônus de dano</span>
+<span class="fc" id="L121">        batalha.turnoDosInimigos();               //cada inimigo ataca com a própria arma</span>
+
+        //Variável do tipo da mãe (GolpeDeEnergia) guardando um filho (BolaDeFogo)
+<span class="fc" id="L124">        GolpeDeEnergia golpe = new BolaDeFogo(true, 2.0, 15, 0.0, 20);</span>
+<span class="fc" id="L125">        batalha.usarHabilidade(golpe, inimigos.get(2));</span>
+<span class="fc" id="L126">        batalha.usarHabilidade(golpe, inimigos.get(0)); //ainda em cooldown: não usa</span>
+<span class="fc" id="L127">        batalha.usarHabilidade(new Apara(true, 1.5, 5, 0.3), null);</span>
+
+        //Exceções tratadas: os dois erros viram mensagem, o jogo não para
+<span class="fc" id="L130">        batalha.usarItem(&quot;modulo_cura&quot;);</span>
+<span class="fc" id="L131">        batalha.usarItem(&quot;modulo_cura&quot;);          //já usou o único: ItemNaoEncontradoException</span>
+<span class="fc" id="L132">        batalha.equiparArma(&quot;modulo_cura-x&quot;);     //id que não existe</span>
+
+        //Perfurante: o tiro do rifle atravessa até 2 inimigos vivos
+<span class="fc" id="L135">        RifleSniper rifle = new RifleSniper(&quot;rifle&quot;, &quot;Rifle Sniper&quot;, &quot;Atravessa até 2 alvos&quot;, 30, 0.0, 2);</span>
+<span class="fc" id="L136">        Perfurante perfurante = rifle; //a interface também serve de tipo</span>
+<span class="fc" id="L137">        tela.mostrarMensagem(&quot;Rifle atravessa &quot; + perfurante.getAlvosAtravessados() + &quot; alvos&quot;);</span>
+<span class="fc" id="L138">        batalha.dispararPerfurante(rifle);</span>
+
+<span class="fc" id="L140">        batalha.equiparArma(jogador.getInventario().listarDoTipo(Espada.class).get(0).getId());</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        for (Inimigo inimigo : inimigos) {</span>
+<span class="fc" id="L142">            batalha.jogadorAtaca(inimigo);</span>
+<span class="fc" id="L143">        }</span>
+
+        //=== Status ===
+<span class="fc" id="L146">        tela.titulo(&quot;Status&quot;);</span>
+<span class="fc" id="L147">        tela.mostrarJogador(jogador);</span>
+<span class="fc" id="L148">        tela.mostrarPersonagens(inimigos);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        tela.mostrarMensagem(batalha.jogadorVenceu() ? &quot;Vitória!&quot; : &quot;Ainda há inimigos de pé.&quot;);</span>
+
+        //=== Sandevistan (câmera lenta) e Cyberpsicose ===
+<span class="fc" id="L152">        demonstrarSandevistan(tela);</span>
+
+        //=== NPCs amigáveis da sala (Npc, NpcInformante, NpcCurandeiro e o controle Dialogo) ===
+<span class="fc" id="L155">        demonstrarNpcs(tela, jogador, laboratorio);</span>
+
+        // =========================================================================
+        // DEMONSTRAÇÃO: SISTEMA MODULAR DE ARMADILHAS (POO / SOLID / DESIGN PATTERNS)
+        // =========================================================================
+<span class="fc" id="L160">        demonstrarSistemaDeArmadilhas();</span>
+
+        // =========================================================================
+        // CAMPANHA: as 5 salas do jogo do FXGL, até a luta com o NEXUS
+        // =========================================================================
+<span class="fc" id="L165">        demonstrarCampanha(tela);</span>
+<span class="fc" id="L166">    }</span>
+
+    //=== Campanha ===
+    //Mesmo mapa do jogo do FXGL: 5 salas ligadas, com os inimigos e os itens
+    //de cada uma (mesmos nomes, vida e dano dos JSON de lá). Mostra as
+    //regras novas na ordem em que aparecem jogando: energia por acerto,
+    //Raio de Gelo (nível 2), Buraco Negro (nível 3), a Curandeira e o chefe.
+    //Pra demonstração não ficar enorme, nas salas 1 a 4 os inimigos só
+    //atacam nos turnos marcados; na arena a luta é completa.
+    private static void demonstrarCampanha(TelaConsole tela) {
+<span class="fc" id="L176">        Mapa mapa = montarMapaEixo0();</span>
+<span class="fc" id="L177">        NpcsDasSalas.colocarNpcs(mapa);</span>
+<span class="fc" id="L178">        List&lt;Sala&gt; salas = List.copyOf(mapa.getSalas().values());</span>
+
+<span class="fc" id="L180">        Jogador michyle = new Jogador(&quot;Michyle&quot;, 100,</span>
+                new Espada(&quot;espada&quot;, &quot;Espada&quot;, &quot;Arma inicial&quot;, 10, 0.0), 50);
+<span class="fc" id="L182">        Dialogo dialogo = new Dialogo(michyle, tela);</span>
+
+<span class="fc" id="L184">        tela.titulo(&quot;Campanha: &quot; + mapa.getNome() + &quot; (&quot; + mapa.totalSalas() + &quot; salas)&quot;);</span>
+<span class="fc" id="L185">        tela.mostrarMensagem(&quot;Dificuldade: &quot; + michyle.getDificuldade().getNome()</span>
+                + &quot; (Fácil recebe metade do dano, Difícil 1,5x)&quot;);
+
+        //--- Sala 1: Informante, energia só por acerto ---
+<span class="fc" id="L189">        Sala sala1 = salas.get(0);</span>
+<span class="fc" id="L190">        tela.titulo(&quot;Sala 1: &quot; + sala1.getNome());</span>
+<span class="fc" id="L191">        tela.mostrarSala(sala1);</span>
+<span class="fc" id="L192">        dialogo.conversarAteOFim(sala1.getNpcs().get(0));</span>
+<span class="fc" id="L193">        coletarItens(michyle, sala1, tela);</span>
+<span class="fc" id="L194">        Batalha batalha = new Batalha(michyle, sala1.getInimigos(), tela);</span>
+<span class="fc" id="L195">        GolpeDeEnergia bolaDeFogo = new BolaDeFogo(true, 2.0, 15, 0.0, 20);</span>
+<span class="fc" id="L196">        batalha.usarHabilidade(bolaDeFogo, sala1.getInimigos().get(1));</span>
+<span class="fc" id="L197">        batalha.turnoDosInimigos();</span>
+<span class="fc" id="L198">        tela.mostrarMensagem(&quot;  energia depois de um turno: &quot; + michyle.getEnergiaAtual()</span>
+                + &quot; (não recarrega sozinha antes do nível &quot; + Jogador.NIVEL_RECARGA_AUTOMATICA + &quot;)&quot;);
+<span class="fc" id="L200">        venceSemContraAtaque(batalha);</span>
+<span class="fc" id="L201">        tela.mostrarMensagem(&quot;  energia depois dos acertos: &quot; + michyle.getEnergiaAtual()</span>
+                + &quot; (+&quot; + Jogador.ENERGIA_POR_ACERTO + &quot; por acerto)&quot;);
+
+        //--- Sala 2: nível 2 libera o Raio de Gelo ---
+<span class="fc" id="L205">        Sala sala2 = salas.get(1);</span>
+<span class="fc" id="L206">        tela.titulo(&quot;Sala 2: &quot; + sala2.getNome());</span>
+<span class="fc" id="L207">        tela.mostrarSala(sala2);</span>
+<span class="fc" id="L208">        coletarItens(michyle, sala2, tela);</span>
+<span class="fc" id="L209">        batalha = new Batalha(michyle, sala2.getInimigos(), tela);</span>
+<span class="fc" id="L210">        equiparPrimeira(batalha, michyle, Shotgun.class);</span>
+<span class="fc" id="L211">        batalha.jogadorAtaca(sala2.getInimigos().get(1)); //derruba o Atirador: sobe pro nível 2</span>
+<span class="fc" id="L212">        Inimigo espadachim = sala2.getInimigos().get(2);</span>
+<span class="fc" id="L213">        batalha.usarGelo(espadachim);</span>
+<span class="fc" id="L214">        batalha.turnoDosInimigos(); //o Espadachim congelado perde o turno</span>
+<span class="fc" id="L215">        venceSemContraAtaque(batalha);</span>
+
+        //--- Sala 3: nível 3 libera o Buraco Negro ---
+<span class="fc" id="L218">        Sala sala3 = salas.get(2);</span>
+<span class="fc" id="L219">        tela.titulo(&quot;Sala 3: &quot; + sala3.getNome());</span>
+<span class="fc" id="L220">        tela.mostrarSala(sala3);</span>
+<span class="fc" id="L221">        coletarItens(michyle, sala3, tela);</span>
+<span class="fc" id="L222">        batalha = new Batalha(michyle, sala3.getInimigos(), tela);</span>
+<span class="fc" id="L223">        equiparPrimeira(batalha, michyle, PistolaDuplaDePlasma.class);</span>
+<span class="fc" id="L224">        venceSemContraAtaque(batalha);</span>
+
+        //--- Sala 4: Buraco Negro em 6 inimigos e a Curandeira ---
+<span class="fc" id="L227">        Sala sala4 = salas.get(3);</span>
+<span class="fc" id="L228">        tela.titulo(&quot;Sala 4: &quot; + sala4.getNome());</span>
+<span class="fc" id="L229">        tela.mostrarSala(sala4);</span>
+<span class="fc" id="L230">        coletarItens(michyle, sala4, tela);</span>
+<span class="fc" id="L231">        batalha = new Batalha(michyle, sala4.getInimigos(), tela);</span>
+<span class="fc" id="L232">        batalha.turnoDosInimigos(); //seis inimigos atacam juntos</span>
+<span class="fc" id="L233">        tela.mostrarJogador(michyle);</span>
+<span class="fc" id="L234">        NpcCurandeiro curandeira = (NpcCurandeiro) sala4.getNpcs().get(0);</span>
+<span class="fc" id="L235">        dialogo.conversar(curandeira); //a cura custa 20 de energia</span>
+<span class="fc" id="L236">        tela.mostrarJogador(michyle);</span>
+<span class="fc" id="L237">        batalha.usarBuracoNegro();             //sem energia cheia: não dá</span>
+<span class="fc" id="L238">        batalha.usarItem(&quot;modulo_energia&quot;);    //+20: energia cheia de novo</span>
+<span class="fc" id="L239">        batalha.usarBuracoNegro();             //destrói os seis de uma vez</span>
+<span class="fc" id="L240">        tela.mostrarJogador(michyle);</span>
+
+        //--- Sala 5: o NEXUS começa como NPC ---
+<span class="fc" id="L243">        Sala arena = salas.get(4);</span>
+<span class="fc" id="L244">        tela.titulo(&quot;Sala 5: &quot; + arena.getNome());</span>
+<span class="fc" id="L245">        tela.mostrarSala(arena);</span>
+<span class="fc" id="L246">        coletarItens(michyle, arena, tela);</span>
+<span class="fc" id="L247">        NpcChefe nexusNpc = (NpcChefe) arena.getNpcs().get(0);</span>
+<span class="fc" id="L248">        dialogo.conversarAteOFim(nexusNpc);</span>
+<span class="fc" id="L249">        Chefe nexus = nexusNpc.despertar();</span>
+<span class="fc" id="L250">        new Batalha(michyle, List.of(), tela).usarItem(&quot;modulo_energia&quot;); //energia pro Raio de Gelo</span>
+<span class="fc" id="L251">        lutarContraChefe(new Batalha(michyle, List.of(nexus), tela), michyle, nexus, tela);</span>
+<span class="fc" id="L252">    }</span>
+
+    //O jogador ataca o primeiro inimigo vivo até não sobrar nenhum (os
+    //inimigos não revidam: só pra encurtar a demonstração)
+    private static void venceSemContraAtaque(Batalha batalha) {
+<span class="pc bpc" id="L257" title="1 of 4 branches missed.">        for (int i = 0; i &lt; 60 &amp;&amp; !batalha.jogadorVenceu(); i++) {</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">            for (Inimigo inimigo : batalha.getInimigos()) {</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                if (!inimigo.estaMorto()) {</span>
+<span class="fc" id="L260">                    batalha.jogadorAtaca(inimigo);</span>
+<span class="fc" id="L261">                    break;</span>
+                }
+<span class="fc" id="L263">            }</span>
+        }
+<span class="fc" id="L265">    }</span>
+
+    //Luta completa: um turno do jogador, um turno do chefe. A estratégia
+    //é simples: cura com pouca vida, gelo quando pode, Buraco Negro com a
+    //energia cheia e, no resto, tiro de rifle
+    private static void lutarContraChefe(Batalha batalha, Jogador jogador, Chefe chefe, TelaConsole tela) {
+<span class="fc" id="L271">        tela.titulo(&quot;Luta: &quot; + chefe.getNome());</span>
+<span class="fc" id="L272">        equiparPrimeira(batalha, jogador, RifleSniper.class);</span>
+<span class="pc bpc" id="L273" title="2 of 6 branches missed.">        for (int turno = 1; turno &lt;= 60 &amp;&amp; !batalha.jogadorVenceu() &amp;&amp; !batalha.jogadorPerdeu(); turno++) {</span>
+<span class="fc" id="L274">            tela.mostrarMensagem(&quot;-- turno &quot; + turno + &quot; (fase &quot; + chefe.getFase() + &quot;) --&quot;);</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">            if (jogador.getVidaAtual() * 3 &lt; jogador.getVidaMaxima()</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">                    &amp;&amp; jogador.getInventario().buscar(&quot;modulo_cura&quot;) != null) {</span>
+<span class="fc" id="L277">                batalha.usarItem(&quot;modulo_cura&quot;);</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            } else if (jogador.getBuracoNegro().podeUsar(jogador)) {</span>
+<span class="nc" id="L279">                batalha.usarBuracoNegro();</span>
+<span class="pc bpc" id="L280" title="1 of 4 branches missed.">            } else if (jogador.getGelo().podeUsar(jogador) &amp;&amp; !chefe.estaCongelado()) {</span>
+<span class="fc" id="L281">                batalha.usarGelo(chefe);</span>
+            } else {
+<span class="fc" id="L283">                batalha.jogadorAtaca(chefe);</span>
+            }
+<span class="fc" id="L285">            batalha.turnoDosInimigos();</span>
+        }
+<span class="fc" id="L287">        tela.mostrarJogador(jogador);</span>
+<span class="fc" id="L288">        tela.mostrarPersonagem(chefe);</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">        tela.mostrarMensagem(batalha.jogadorVenceu() ? &quot;NEXUS derrotado. Fim do jogo!&quot; : &quot;Michyle caiu na arena.&quot;);</span>
+<span class="fc" id="L290">    }</span>
+
+    //Armas não empilham: no inventário cada uma ganha um id único
+    //(rifle-1...), então a busca é pelo tipo, com o listarDoTipo genérico
+    private static void equiparPrimeira(Batalha batalha, Jogador jogador, Class&lt;? extends Arma&gt; tipo) {
+<span class="fc" id="L295">        batalha.equiparArma(jogador.getInventario().listarDoTipo(tipo).get(0).getId());</span>
+<span class="fc" id="L296">    }</span>
+
+    private static void coletarItens(Jogador jogador, Sala sala, TelaConsole tela) {
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        for (Inventariavel item : sala.getItens()) {</span>
+<span class="fc" id="L300">            jogador.coletarItem(item);</span>
+<span class="fc" id="L301">        }</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        if (!sala.getItens().isEmpty()) {</span>
+<span class="fc" id="L303">            tela.mostrarMensagem(&quot;Michyle pega &quot; + sala.getItens().size() + &quot; item(ns) do chão.&quot;);</span>
+        }
+<span class="fc" id="L305">    }</span>
+
+    //As 5 salas do FXGL: mesmos inimigos (nome, vida, dano) e itens dos
+    //nivel1..5.json de lá, ligadas leste-oeste
+    private static Mapa montarMapaEixo0() {
+<span class="fc" id="L310">        Mapa mapa = new Mapa(&quot;Eixo 0&quot;);</span>
+<span class="fc" id="L311">        Sala s1 = new Sala(&quot;sala1&quot;, &quot;Laboratório Criogênico&quot;, &quot;Onde Michyle acorda, entre tubos de criogenia.&quot;);</span>
+<span class="fc" id="L312">        Sala s2 = new Sala(&quot;sala2&quot;, &quot;Cidade: Avenida de Neon&quot;, &quot;Letreiros piscando e drones no céu.&quot;);</span>
+<span class="fc" id="L313">        Sala s3 = new Sala(&quot;sala3&quot;, &quot;Cidade: Viadutos&quot;, &quot;Plataformas suspensas sobre a cidade.&quot;);</span>
+<span class="fc" id="L314">        Sala s4 = new Sala(&quot;sala4&quot;, &quot;Cidade: Portão da Torre&quot;, &quot;A última parada antes da arena.&quot;);</span>
+<span class="fc" id="L315">        Sala s5 = new Sala(&quot;sala5&quot;, &quot;Arena do NEXUS&quot;, &quot;Uma sala vazia. Algo flutua no centro.&quot;);</span>
+<span class="fc" id="L316">        List&lt;Sala&gt; ordem = List.of(s1, s2, s3, s4, s5);</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">        for (int i = 0; i &lt; ordem.size(); i++) {</span>
+<span class="fc" id="L318">            mapa.adicionarSala(ordem.get(i));</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">            if (i &gt; 0) {</span>
+<span class="fc" id="L320">                ordem.get(i - 1).conectarBidirecional(&quot;leste&quot;, &quot;oeste&quot;, ordem.get(i));</span>
+            }
+        }
+
+<span class="fc" id="L324">        s1.adicionarInimigo(new Voador(&quot;Morcego&quot;, 30, 5, 0.0));</span>
+<span class="fc" id="L325">        s1.adicionarInimigo(new Sniper(&quot;Atirador&quot;, 20, 10, 0.0));</span>
+<span class="fc" id="L326">        s1.adicionarInimigo(new Melee(&quot;Espadachim&quot;, 50, 15, 0.0));</span>
+<span class="fc" id="L327">        s1.adicionarItem(cura(30));</span>
+<span class="fc" id="L328">        s1.adicionarItem(energia(20));</span>
+<span class="fc" id="L329">        s1.adicionarItem(new AdagaDupla(&quot;adaga&quot;, &quot;Adagas Duplas&quot;, &quot;Dois cortes rápidos&quot;, 8, 0.0));</span>
+
+<span class="fc" id="L331">        s2.adicionarInimigo(new Voador(&quot;Morcego&quot;, 30, 5, 0.0));</span>
+<span class="fc" id="L332">        s2.adicionarInimigo(new Sniper(&quot;Atirador&quot;, 20, 10, 0.0));</span>
+<span class="fc" id="L333">        s2.adicionarInimigo(new Melee(&quot;Espadachim&quot;, 50, 15, 0.0));</span>
+<span class="fc" id="L334">        s2.adicionarInimigo(new Voador(&quot;Morcego Alfa&quot;, 40, 8, 0.0));</span>
+<span class="fc" id="L335">        s2.adicionarItem(energia(20));</span>
+<span class="fc" id="L336">        s2.adicionarItem(cura(30));</span>
+<span class="fc" id="L337">        s2.adicionarItem(new Shotgun(&quot;shotgun&quot;, &quot;Shotgun&quot;, &quot;5 balins em leque&quot;, 8, 5, 0.0));</span>
+
+<span class="fc" id="L339">        s3.adicionarInimigo(new Voador(&quot;Morcego&quot;, 30, 6, 0.0));</span>
+<span class="fc" id="L340">        s3.adicionarInimigo(new Sniper(&quot;Atirador&quot;, 22, 11, 0.0));</span>
+<span class="fc" id="L341">        s3.adicionarInimigo(new Melee(&quot;Espadachim&quot;, 55, 16, 0.0));</span>
+<span class="fc" id="L342">        s3.adicionarInimigo(new Sniper(&quot;Atirador Elite&quot;, 28, 14, 0.0));</span>
+<span class="fc" id="L343">        s3.adicionarInimigo(new Voador(&quot;Morcego Alfa&quot;, 42, 9, 0.0));</span>
+<span class="fc" id="L344">        s3.adicionarItem(cura(30));</span>
+<span class="fc" id="L345">        s3.adicionarItem(energia(20));</span>
+<span class="fc" id="L346">        s3.adicionarItem(new PistolaDuplaDePlasma(&quot;pistola&quot;, &quot;Pistola Dupla de Plasma&quot;, &quot;Dois tiros&quot;, 9, 0.0));</span>
+
+<span class="fc" id="L348">        s4.adicionarInimigo(new Voador(&quot;Morcego Alfa&quot;, 45, 9, 0.0));</span>
+<span class="fc" id="L349">        s4.adicionarInimigo(new Sniper(&quot;Atirador Elite&quot;, 28, 14, 0.0));</span>
+<span class="fc" id="L350">        s4.adicionarInimigo(new Melee(&quot;Espadachim Brutal&quot;, 65, 20, 0.0));</span>
+<span class="fc" id="L351">        s4.adicionarInimigo(new Voador(&quot;Morcego Alfa&quot;, 45, 9, 0.0));</span>
+<span class="fc" id="L352">        s4.adicionarInimigo(new Sniper(&quot;Atirador Elite&quot;, 30, 15, 0.0));</span>
+<span class="fc" id="L353">        s4.adicionarInimigo(new Melee(&quot;Espadachim Brutal&quot;, 70, 22, 0.0));</span>
+<span class="fc" id="L354">        s4.adicionarItem(cura(30));</span>
+<span class="fc" id="L355">        s4.adicionarItem(energia(20));</span>
+<span class="fc" id="L356">        s4.adicionarItem(new RifleSniper(&quot;rifle&quot;, &quot;Rifle Sniper&quot;, &quot;Atravessa até 3 alvos&quot;, 30, 0.0, 3));</span>
+
+        //O chefe começa como NPC; vira o Chefe depois da conversa
+<span class="fc" id="L359">        s5.adicionarNpc(new NpcChefe(&quot;NEXUS&quot;, List.of(</span>
+                &quot;Então você chegou até aqui... Eu sou NEXUS.&quot;,
+                &quot;Cada sala que você atravessou foi um teste meu.&quot;,
+                &quot;Os espinhos e as prensas do caminho obedecem a mim.&quot;,
+                &quot;Chega de conversa. Vamos ver se você sobrevive!&quot;),
+                new Chefe(&quot;NEXUS&quot;, 450, 12)));
+<span class="fc" id="L365">        s5.adicionarItem(new ModuloCura(&quot;modulo_cura&quot;, &quot;Módulo de Cura&quot;, &quot;Recupera 40 de vida&quot;, Categoria.CONSUMIVEL, 40));</span>
+<span class="fc" id="L366">        s5.adicionarItem(new ModuloEnergia(&quot;modulo_energia&quot;, &quot;Módulo de Energia&quot;, &quot;Recupera 25 de energia&quot;, Categoria.CONSUMIVEL, 25));</span>
+<span class="fc" id="L367">        return mapa;</span>
+    }
+
+    private static ModuloCura cura(int quantidade) {
+<span class="fc" id="L371">        return new ModuloCura(&quot;modulo_cura&quot;, &quot;Módulo de Cura&quot;, &quot;Recupera &quot; + quantidade + &quot; de vida&quot;, Categoria.CONSUMIVEL, quantidade);</span>
+    }
+
+    private static ModuloEnergia energia(int quantidade) {
+<span class="fc" id="L375">        return new ModuloEnergia(&quot;modulo_energia&quot;, &quot;Módulo de Energia&quot;, &quot;Recupera &quot; + quantidade + &quot; de energia&quot;, Categoria.CONSUMIVEL, quantidade);</span>
+    }
+
+    //Sandevistan: liga, os inimigos agem 1 turno a cada 4 (tempo a 25%),
+    //a energia acaba e ela desliga sozinha. A semente 4102 faz o sorteio
+    //de 25% cair na Cyberpsicose, pra mostrar o efeito sempre
+    private static void demonstrarSandevistan(TelaConsole tela) {
+<span class="fc" id="L382">        Jogador jogador = new Jogador(&quot;Michyle&quot;, 100,</span>
+                new Espada(&quot;espada&quot;, &quot;Espada Longa&quot;, &quot;&quot;, 10, 0.0), 50);
+<span class="fc" id="L384">        jogador.coletarItem(new ModuloEnergia(&quot;modulo_energia&quot;, &quot;Módulo de Energia&quot;,</span>
+                &quot;Recupera 40 de energia&quot;, Categoria.CONSUMIVEL, 40));
+<span class="fc" id="L386">        List&lt;Inimigo&gt; inimigos = List.of(new Melee(&quot;Robô&quot;, 200, 8, 0.0));</span>
+<span class="fc" id="L387">        Batalha batalha = new Batalha(jogador, inimigos, tela);</span>
+<span class="fc" id="L388">        SandevistanMichyle sandevistan = new SandevistanMichyle(true, new Random(4102));</span>
+
+<span class="fc" id="L390">        tela.titulo(&quot;Sandevistan&quot;);</span>
+<span class="fc" id="L391">        batalha.alternarSandevistan(sandevistan);</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">        for (int turno = 1; turno &lt;= 3; turno++) {</span>
+<span class="fc" id="L393">            batalha.jogadorAtaca(inimigos.get(0));</span>
+<span class="fc" id="L394">            batalha.turnoDosInimigos();</span>
+<span class="fc" id="L395">            tela.mostrarMensagem(&quot;  energia: &quot; + jogador.getEnergiaAtual() + &quot;/&quot; + jogador.getEnergiaMaxima());</span>
+        }
+<span class="fc" id="L397">        batalha.alternarSandevistan(sandevistan); //em cooldown: não liga</span>
+<span class="fc" id="L398">        batalha.usarItem(&quot;modulo_energia&quot;);       //energia volta a 50%: a Cyberpsicose acaba</span>
+<span class="fc" id="L399">        batalha.turnoDosInimigos();               //tempo normal de novo</span>
+<span class="fc" id="L400">        tela.mostrarJogador(jogador);</span>
+<span class="pc bpc" id="L401" title="1 of 2 branches missed.">        tela.mostrarMensagem(&quot;Cyberpsicose ativa? &quot; + (sandevistan.getCyberpsicose().estaAtivo() ? &quot;sim&quot; : &quot;não&quot;));</span>
+<span class="fc" id="L402">    }</span>
+
+    //NPCs amigáveis: mesma divisão do resto do main (monta as peças). Quem
+    //conversa é o Dialogo (controle); quem imprime é a TelaConsole (visão).
+    private static void demonstrarNpcs(TelaConsole tela, Jogador jogador, Sala sala) {
+<span class="fc" id="L407">        NpcInformante ze = new NpcInformante(&quot;Zé&quot;, List.of(</span>
+                &quot;Olá, viajante! Há armas e módulos espalhados pelas salas.&quot;,
+                &quot;Use a Apara na hora certa pra não tomar dano.&quot;,
+                &quot;No fim do caminho existe um chefe. Chegue com a vida cheia!&quot;));
+<span class="fc" id="L411">        NpcCurandeiro vega = new NpcCurandeiro(&quot;Dra. Vega&quot;, List.of(</span>
+                &quot;Você parece ferido. Fique perto que eu cuido disso.&quot;,
+                &quot;Só tenho uma cura por sala, então use com sabedoria.&quot;), 1);
+
+        //Lista do tipo da mãe (Npc) com objetos de duas filhas: coleção polimórfica
+<span class="fc" id="L416">        List&lt;Npc&gt; npcs = List.of(ze, vega);</span>
+<span class="fc" id="L417">        Dialogo dialogo = new Dialogo(jogador, tela);</span>
+
+<span class="fc" id="L419">        tela.titulo(&quot;NPCs em &quot; + sala.getNome());</span>
+<span class="fc" id="L420">        tela.mostrarMensagem(&quot;NPCs aqui: &quot; + npcs);</span>
+
+        //Mesma chamada (interagir) pra todos: o Informante só fala, o Curandeiro cura
+<span class="fc" id="L423">        tela.titulo(&quot;NPCs: conversa com a vida cheia (a cura não é gasta)&quot;);</span>
+<span class="fc" id="L424">        dialogo.conversarComTodos(npcs);</span>
+
+<span class="fc" id="L426">        tela.titulo(&quot;NPCs: conversa depois de ser ferido&quot;);</span>
+<span class="fc" id="L427">        jogador.tomarDano(60);</span>
+<span class="fc" id="L428">        tela.mostrarJogador(jogador);</span>
+<span class="fc" id="L429">        dialogo.conversarComTodos(npcs);</span>
+<span class="fc" id="L430">        tela.mostrarJogador(jogador);</span>
+
+<span class="fc" id="L432">        tela.titulo(&quot;NPCs: sem curas restantes&quot;);</span>
+<span class="fc" id="L433">        jogador.tomarDano(30);</span>
+<span class="fc" id="L434">        dialogo.conversar(vega);</span>
+
+<span class="fc" id="L436">        tela.titulo(&quot;NPCs: invulneráveis&quot;);</span>
+<span class="fc" id="L437">        ze.tomarDano(999);</span>
+<span class="pc bpc" id="L438" title="1 of 2 branches missed.">        tela.mostrarMensagem(ze.getNome() + &quot; tomou 999 de dano e &quot; + (ze.estaMorto() ? &quot;morreu&quot; : &quot;continua de pé&quot;));</span>
+<span class="fc" id="L439">    }</span>
+
+    private static void demonstrarSistemaDeArmadilhas() {
+<span class="fc" id="L442">        System.out.println(&quot;\n=================================================================&quot;);</span>
+<span class="fc" id="L443">        System.out.println(&quot;   DEMONSTRAÇÃO: SISTEMA DE ARMADILHAS (SOLID &amp; DESIGN PATTERNS)&quot;);</span>
+<span class="fc" id="L444">        System.out.println(&quot;=================================================================&quot;);</span>
+
+        // 1. Geração Procedural Determinística (DEFAULT_SEED = 12345L) para uma Sala
+<span class="fc" id="L447">        Sala salaLaboratorio = new Sala(</span>
+                &quot;cryolab_01&quot;,
+                &quot;Corredor Crio-Laboratório&quot;,
+                &quot;Corredor metálico com armadilhas procedurais ancoradas no teto e no piso.&quot;
+        );
+
+<span class="fc" id="L453">        List&lt;PlatformBounds&gt; plataformasCenario = List.of(</span>
+                new PlatformBounds(0, 0, 3000, 40),      // Teto físico superior (y = 0..40)
+                new PlatformBounds(0, 680, 3000, 40),    // Piso principal (y = 680..720)
+                new PlatformBounds(1200, 520, 220, 20),  // Plataforma elevada 1
+                new PlatformBounds(1900, 500, 220, 20)   // Plataforma elevada 2
+        );
+
+<span class="fc" id="L460">        TrapProceduralGenerator gerador = new TrapProceduralGenerator(); // Usa DEFAULT_SEED = 12345L</span>
+<span class="fc" id="L461">        List&lt;Trap&gt; armadilhasGeradas = gerador.generateTraps(plataformasCenario, 3000, 720, 400, 420);</span>
+<span class="fc" id="L462">        salaLaboratorio.adicionarArmadilhas(armadilhasGeradas);</span>
+<span class="fc" id="L463">        salaLaboratorio.descrever();</span>
+
+        // 2. Simulação de Ciclo de Vida Polimórfico + Observer (TrapListener)
+<span class="fc" id="L466">        Personagem explorador = new Personagem(&quot;Raioni&quot;, 100, 100, 616);</span>
+<span class="fc" id="L467">        SpikesRetrateis espinhos = TrapFactory.createSpikes(300, 616, 128, 64);</span>
+<span class="fc" id="L468">        BlocoQueCai blocoTeto = TrapFactory.createFallingBlock(600, 40, 64, 64, 576);</span>
+
+<span class="fc" id="L470">        TrapListener logListener = new TrapListener() {</span>
+            @Override
+            public void onStateChanged(Trap trap, TrapState oldState, TrapState newState) {
+<span class="fc" id="L473">                System.out.printf(&quot;  [Observer] %s mudou de estado: %s -&gt; %s%n&quot;, trap.getName(), oldState, newState);</span>
+<span class="fc" id="L474">            }</span>
+
+            @Override
+            public void onTelegraphStarted(Trap trap, double duration) {
+<span class="fc" id="L478">                System.out.printf(&quot;  [Telegraphing] %s vibrando em alerta por %.1fs!%n&quot;, trap.getName(), duration);</span>
+<span class="fc" id="L479">            }</span>
+
+            @Override
+            public void onImpact(Trap trap) {
+<span class="fc" id="L483">                System.out.printf(&quot;  [Impacto] %s atingiu o solo em Y=%.0f! (Camera Shake)%n&quot;, trap.getName(), trap.getY());</span>
+<span class="fc" id="L484">            }</span>
+
+            @Override
+            public void onDamageDealt(Trap trap, DamageTarget target, int damage) {
+<span class="fc" id="L488">                System.out.printf(&quot;  [Dano] %s causou %d de dano! Alvo em I-Frames (1.0s): %s%n&quot;,</span>
+<span class="fc" id="L489">                        trap.getName(), damage, target);</span>
+<span class="fc" id="L490">            }</span>
+        };
+
+<span class="fc" id="L493">        espinhos.addListener(logListener);</span>
+<span class="fc" id="L494">        blocoTeto.addListener(logListener);</span>
+
+<span class="fc" id="L496">        Sala salaTeste = new Sala(&quot;teste_armadilhas&quot;, &quot;Câmara de Testes&quot;, &quot;Simulação passo a passo das armadilhas.&quot;);</span>
+<span class="fc" id="L497">        salaTeste.adicionarArmadilha(espinhos);</span>
+<span class="fc" id="L498">        salaTeste.adicionarArmadilha(blocoTeto);</span>
+
+<span class="fc" id="L500">        System.out.println(&quot;\n--- Passo 1: Jogador pisa nos Espinhos Retráteis (x=320, y=616) ---&quot;);</span>
+<span class="fc" id="L501">        explorador.moverPara(320, 616);</span>
+<span class="fc" id="L502">        salaTeste.atualizarArmadilhas(0.1, explorador); // Aciona gatilho -&gt; TELEGRAPHING (2.0s)</span>
+<span class="fc" id="L503">        salaTeste.atualizarArmadilhas(1.0, explorador); // Ainda em aviso (1.0s de 2.0s)</span>
+<span class="fc" id="L504">        salaTeste.atualizarArmadilhas(1.05, explorador); // Completa 2.0s -&gt; ACTIVE e aplica dano + I-Frames!</span>
+
+<span class="fc" id="L506">        System.out.println(&quot;\n--- Passo 2: Jogador passa sob o Bloco Esmagador (x=610, y=616) ---&quot;);</span>
+<span class="fc" id="L507">        explorador.atualizar(1.1); // Avança 1.1s para encerrar a janela de I-Frames anterior</span>
+<span class="fc" id="L508">        explorador.moverPara(610, 616);</span>
+<span class="fc" id="L509">        salaTeste.atualizarArmadilhas(0.1, explorador); // Aciona gatilho vertical -&gt; TELEGRAPHING (0.5s)</span>
+<span class="fc" id="L510">        salaTeste.atualizarArmadilhas(0.3, explorador);</span>
+<span class="fc" id="L511">        salaTeste.atualizarArmadilhas(0.25, explorador); // Entra em ACTIVE e começa a cair do teto</span>
+<span class="fc" id="L512">        salaTeste.atualizarArmadilhas(0.6, explorador);  // Impacta o chão (Y=616) e atinge o jogador!</span>
+<span class="fc" id="L513">        System.out.println(&quot;Estado final do jogador: &quot; + explorador);</span>
+<span class="fc" id="L514">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

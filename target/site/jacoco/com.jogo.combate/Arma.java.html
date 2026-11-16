@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Arma.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.combate</a> &gt; <span class="el_source">Arma.java</span></div><h1>Arma.java</h1><pre class="source lang-java linenums">package com.jogo.combate;
+
+import java.util.Random;
+
+import com.jogo.inventario.Categoria;
+import com.jogo.inventario.Inventariavel;
+import com.jogo.personagens.Personagem;
+
+//Define a classe abstrata Arma
+//Nela são criados os parametros e metodos de dano crítico
+//E danoBase
+//A relação entre causar dano e o dano base é definida aqui, mas o ato de causar dano é concreto e n muda mais (final)
+//-lincoln
+
+public abstract class Arma implements Inventariavel{
+
+<span class="fc" id="L17">    private static int contadorInstancias = 0;</span>
+
+    private double chanceCritico;
+    private Random gerador;
+
+    private final String id; //Informações de cada classe que pode ir pro inventario
+    private final String nome; //ass raioni
+    private final String descricao;
+    private final double tempoEspera; // Tempo de espera entre golpes em segundos 
+
+    // Construtor completo com tempoEspera (velocidade de uso da arma)
+<span class="fc" id="L28">    public Arma(String idBase, String nome, String descricao, double chanceCritico, double tempoEspera) {</span>
+        //Chance é probabilidade: tem que ficar entre 0 (nunca) e 1 (sempre)
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (chanceCritico &lt; 0 || chanceCritico &gt; 1) {</span>
+<span class="fc" id="L31">            throw new IllegalArgumentException(&quot;Chance de crítico deve estar entre 0 e 1: &quot; + chanceCritico);</span>
+        }
+<span class="fc" id="L33">        this.chanceCritico = chanceCritico;</span>
+<span class="fc" id="L34">        this.gerador = new Random();</span>
+<span class="fc" id="L35">        this.id = idBase + &quot;-&quot; + (++contadorInstancias); //Informações da arma</span>
+<span class="fc" id="L36">        this.nome = nome;</span>
+<span class="fc" id="L37">        this.descricao = descricao;</span>
+<span class="fc" id="L38">        this.tempoEspera = Math.max(0.01, tempoEspera);</span>
+<span class="fc" id="L39">    }</span>
+
+    // Sobrecarga de construtor: assume 1.0 segundo por padrão para armas antigas
+    public Arma(String idBase, String nome, String descricao, double chanceCritico) {
+<span class="fc" id="L43">        this(idBase, nome, descricao, chanceCritico, 1.0);</span>
+<span class="fc" id="L44">    }</span>
+
+    //É final pois é imutavel
+    //O calc do danoBase é o mesmo pra TODOS
+    //E o critico é igual pra todas as armas
+    //-lincoln
+
+    // São as definições de metodos da INterface Inventariavel
+    //ONde basicamente dou um nome,ID e descrição pra cada arma criada ass Raioni
+    @Override public String getId() { 
+<span class="fc" id="L54">        return id; </span>
+    }
+    @Override 
+    public String getNome() { 
+<span class="fc" id="L58">        return nome; </span>
+    }
+    @Override
+    public String getDescricao() { 
+<span class="fc" id="L62">        return descricao; </span>
+    }
+
+    @Override
+    public Categoria getCategoria() {
+<span class="fc" id="L67">        return Categoria.ARMA;</span>
+    }
+
+    // Retorna o tempo de espera em segundos entre ataques
+    public double getTempoEspera() {
+<span class="fc" id="L72">        return tempoEspera;</span>
+    }
+
+    // Retorna a velocidade de ataque em golpes por segundo (1 / tempoEspera)
+    public double getVelocidadeAtaque() {
+<span class="fc" id="L77">        return 1.0 / tempoEspera;</span>
+    }
+
+    public final int causarDano() {
+<span class="fc" id="L81">        return causarDano(null); // aq nulo pq n tem alvo, mas o metodo com alvo é chamado</span>
+    }
+
+    // Calcula o dano considerando quem é o alvo (permite bônus situacionais)
+    public int causarDano(Personagem alvo) {
+<span class="fc" id="L86">        int danoBase = calcularDanoBase(alvo);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        boolean critico = gerador.nextDouble() &lt; chanceCritico;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        return critico ? danoBase * 2 : danoBase;</span>
+    }
+
+    // Sobrecarga com alvo: por padrão, delega para o cálculo base sem alvo
+    protected int calcularDanoBase(Personagem alvo) {
+<span class="fc" id="L93">        return calcularDanoBase();</span>
+    }
+
+    //Isso sim cada arma decide do jeito que quiser
+    protected abstract int calcularDanoBase();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Batalha.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.controle</a> &gt; <span class="el_source">Batalha.java</span></div><h1>Batalha.java</h1><pre class="source lang-java linenums">package com.jogo.controle;
+
+import com.jogo.combate.RifleSniper;
+import com.jogo.excecoes.JogoException;
+import com.jogo.habilidades.BuracoNegro;
+import com.jogo.habilidades.Habilidade;
+import com.jogo.habilidades.SandevistanMichyle;
+import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Jogador;
+import com.jogo.visao.TelaConsole;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+//CONTROLE do MVC: decide a ordem das ações de uma batalha, mexe no
+//modelo (Jogador, Inimigo...) e manda a visão (TelaConsole) mostrar o
+//resultado. Não imprime nada direto e não guarda regra de combate
+//(dano, crítico, XP ficam no modelo).
+public class Batalha {
+
+    private final Jogador jogador;
+    //Lista do tipo da mãe (Inimigo) com objetos de várias filhas
+    //(Melee, Sniper, Voador): coleção polimórfica
+    private final List&lt;Inimigo&gt; inimigos;
+    private final TelaConsole tela;
+    //Sandevistan ligado: os inimigos ficam em câmera lenta. No console,
+    //tempo a 25% = os inimigos só agem 1 turno a cada 4
+    private SandevistanMichyle sandevistan;
+<span class="fc" id="L31">    private int turnosEmCameraLenta = 0;</span>
+    private static final double SEGUNDOS_POR_TURNO = 1.0;
+    //Habilidades já usadas nesta batalha: o cooldown delas anda 1 s por turno
+<span class="fc" id="L34">    private final Set&lt;Habilidade&gt; habilidadesUsadas = new LinkedHashSet&lt;&gt;();</span>
+
+<span class="fc" id="L36">    public Batalha(Jogador jogador, List&lt;? extends Inimigo&gt; inimigos, TelaConsole tela) {</span>
+<span class="fc" id="L37">        this.jogador = jogador;</span>
+<span class="fc" id="L38">        this.inimigos = new ArrayList&lt;&gt;(inimigos);</span>
+<span class="fc" id="L39">        this.tela = tela;</span>
+        //As magias do próprio jogador sempre contam o cooldown nos turnos
+<span class="fc" id="L41">        habilidadesUsadas.add(jogador.getGelo());</span>
+<span class="fc" id="L42">        habilidadesUsadas.add(jogador.getBuracoNegro());</span>
+<span class="fc" id="L43">    }</span>
+
+    //Jogador ataca um inimigo com a arma equipada. Se derrotar, ganha o XP
+    public void jogadorAtaca(Inimigo alvo) {
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">        if (jogador.estaMorto() || alvo.estaMorto()) {</span>
+<span class="fc" id="L48">            return;</span>
+        }
+<span class="fc" id="L50">        int vidaAntes = alvo.getVidaAtual();</span>
+<span class="fc" id="L51">        jogador.iniciarAtaque(alvo);</span>
+<span class="fc" id="L52">        int dano = vidaAntes - alvo.getVidaAtual();</span>
+<span class="fc" id="L53">        tela.mostrarAtaque(jogador.getNome() + &quot; (&quot; + jogador.getArma().getNome() + &quot;)&quot;, alvo, dano);</span>
+<span class="fc" id="L54">        registrarAcerto(dano);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (alvo.estaMorto()) {</span>
+<span class="fc" id="L56">            recompensar(alvo);</span>
+        }
+<span class="fc" id="L58">    }</span>
+
+    //Todos os inimigos vivos atacam o jogador. Mesma chamada
+    //(iniciarAtaque) pra todos; o dano depende da arma de cada um
+    public void turnoDosInimigos() {
+<span class="fc" id="L63">        jogador.atualizar(SEGUNDOS_POR_TURNO); //invencibilidade depois de dano anda 1 s</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (sandevistanLigado()) {</span>
+<span class="fc" id="L65">            turnosEmCameraLenta++;</span>
+<span class="fc" id="L66">            int turnosPorAcao = (int) Math.round(1 / SandevistanMichyle.ESCALA_TEMPO);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (turnosEmCameraLenta % turnosPorAcao != 0) {</span>
+<span class="fc" id="L68">                tela.mostrarMensagem(&quot;Câmera lenta: os inimigos quase não se mexem.&quot;);</span>
+<span class="fc" id="L69">                passarTempo();</span>
+<span class="fc" id="L70">                return;</span>
+            }
+        }
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (Inimigo inimigo : inimigos) {</span>
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">            if (inimigo.estaMorto() || jogador.estaMorto()) {</span>
+<span class="nc" id="L75">                continue;</span>
+            }
+            //Congelado (Raio de Gelo): perde o turno
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (inimigo.passarTurnoCongelado()) {</span>
+<span class="fc" id="L79">                tela.mostrarMensagem(inimigo.getNome() + &quot; está congelado e perde o turno.&quot;);</span>
+<span class="fc" id="L80">                continue;</span>
+            }
+<span class="fc" id="L82">            int vidaAntes = jogador.getVidaAtual();</span>
+<span class="fc" id="L83">            inimigo.iniciarAtaque(jogador);</span>
+<span class="fc" id="L84">            int dano = vidaAntes - jogador.getVidaAtual();</span>
+            //Polimorfismo: o inimigo comum não tem nada a descrever; o
+            //Chefe descreve o aviso ou o ataque da vez
+<span class="fc" id="L87">            String descricao = inimigo.descreverUltimaAcao();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (descricao.isEmpty()) {</span>
+<span class="fc" id="L89">                tela.mostrarAtaque(inimigo.getNome(), jogador, dano);</span>
+            } else {
+<span class="fc" id="L91">                tela.mostrarMensagem(descricao);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                if (dano &gt; 0) {</span>
+<span class="fc" id="L93">                    tela.mostrarAtaque(inimigo.getNome() + &quot; (&quot; + inimigo.getNomeAtaque() + &quot;)&quot;, jogador, dano);</span>
+                }
+            }
+<span class="fc" id="L96">        }</span>
+<span class="fc" id="L97">        passarTempo();</span>
+<span class="fc" id="L98">    }</span>
+
+    //Liga ou desliga a Sandevistan (a mesma ação faz as duas coisas)
+    public boolean alternarSandevistan(SandevistanMichyle habilidade) {
+<span class="fc" id="L102">        boolean estavaLigada = habilidade.estaAtivo();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (!habilidade.usar(jogador, null)) {</span>
+<span class="fc" id="L104">            tela.mostrarErro(&quot;Sandevistan indisponível (sem energia ou em cooldown: &quot;</span>
+<span class="fc" id="L105">                    + Math.round(habilidade.getCooldownRestante()) + &quot;s)&quot;);</span>
+<span class="fc" id="L106">            return false;</span>
+        }
+<span class="fc" id="L108">        sandevistan = habilidade;</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (estavaLigada) {</span>
+<span class="nc" id="L110">            tela.mostrarMensagem(&quot;Sandevistan DESLIGADA. Cooldown de &quot;</span>
+<span class="nc" id="L111">                    + Math.round(SandevistanMichyle.COOLDOWN_POS_DESATIVAR) + &quot;s.&quot;);</span>
+        } else {
+<span class="fc" id="L113">            turnosEmCameraLenta = 0;</span>
+<span class="fc" id="L114">            tela.mostrarMensagem(&quot;Sandevistan LIGADA: o tempo dos inimigos cai para 25%.&quot;);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (habilidade.getCyberpsicose().estaAtivo()) {</span>
+<span class="fc" id="L116">                tela.mostrarErro(&quot;CYBERPSICOSE! A vida vai caindo até a metade.&quot;);</span>
+            }
+        }
+<span class="fc" id="L119">        return true;</span>
+    }
+
+    public boolean sandevistanLigado() {
+<span class="fc bfc" id="L123" title="All 4 branches covered.">        return sandevistan != null &amp;&amp; sandevistan.estaAtivo();</span>
+    }
+
+    //Cada turno conta como 1 segundo: cooldown das habilidades, recarga de
+    //energia (a partir do nível 6), Sandevistan e Cyberpsicose
+    private void passarTempo() {
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (Habilidade habilidade : habilidadesUsadas) {</span>
+<span class="fc" id="L130">            habilidade.atualizar(SEGUNDOS_POR_TURNO);</span>
+<span class="fc" id="L131">        }</span>
+<span class="fc" id="L132">        jogador.recarregarEnergiaPorTurno();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (sandevistan == null) {</span>
+<span class="fc" id="L134">            return;</span>
+        }
+<span class="fc" id="L136">        boolean estavaLigada = sandevistan.estaAtivo();</span>
+<span class="fc" id="L137">        int vidaAntes = jogador.getVidaAtual();</span>
+<span class="fc" id="L138">        sandevistan.atualizarSandevistan(jogador, SEGUNDOS_POR_TURNO);</span>
+<span class="fc" id="L139">        int danoDebuff = vidaAntes - jogador.getVidaAtual();</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (danoDebuff &gt; 0) {</span>
+<span class="fc" id="L141">            tela.mostrarMensagem(&quot;Cyberpsicose: &quot; + jogador.getNome() + &quot; perdeu &quot; + danoDebuff + &quot; de vida.&quot;);</span>
+        }
+<span class="fc bfc" id="L143" title="All 4 branches covered.">        if (estavaLigada &amp;&amp; !sandevistan.estaAtivo()) {</span>
+<span class="fc" id="L144">            tela.mostrarErro(&quot;Energia esgotada: a Sandevistan desligou sozinha.&quot;);</span>
+        }
+<span class="fc" id="L146">    }</span>
+
+    //Usa uma habilidade. alvo pode ser null (ex: Apara)
+    public boolean usarHabilidade(Habilidade habilidade, Inimigo alvo) {
+<span class="fc" id="L150">        String nome = habilidade.getClass().getSimpleName();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        int vidaAntes = alvo == null ? 0 : alvo.getVidaAtual();</span>
+<span class="fc" id="L152">        boolean usou = habilidade.usar(jogador, alvo);</span>
+<span class="fc" id="L153">        habilidadesUsadas.add(habilidade);</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (!usou) {</span>
+<span class="fc" id="L155">            tela.mostrarErro(&quot;Não deu pra usar &quot; + nome + &quot; agora (cooldown ou energia)&quot;);</span>
+<span class="fc" id="L156">            return false;</span>
+        }
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (alvo == null) {</span>
+<span class="fc" id="L159">            tela.mostrarMensagem(jogador.getNome() + &quot; usou &quot; + nome);</span>
+        } else {
+<span class="fc" id="L161">            int dano = vidaAntes - alvo.getVidaAtual();</span>
+<span class="fc" id="L162">            tela.mostrarAtaque(jogador.getNome() + &quot; (&quot; + nome + &quot;)&quot;, alvo, dano);</span>
+<span class="fc" id="L163">            registrarAcerto(dano);</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (alvo.estaCongelado()) {</span>
+<span class="fc" id="L165">                tela.mostrarMensagem(alvo.getNome() + &quot; ficou congelado por &quot;</span>
+<span class="fc" id="L166">                        + Math.round(alvo.getTurnosCongelado()) + &quot; turno(s).&quot;);</span>
+            }
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (alvo.estaMorto()) {</span>
+<span class="fc" id="L169">                recompensar(alvo);</span>
+            }
+        }
+<span class="fc" id="L172">        return true;</span>
+    }
+
+    //Buraco Negro: atinge todos os inimigos vivos da batalha de uma vez
+    public boolean usarBuracoNegro() {
+<span class="fc" id="L177">        BuracoNegro buraco = jogador.getBuracoNegro();</span>
+<span class="fc" id="L178">        List&lt;Integer&gt; vidasAntes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L179">        List&lt;Inimigo&gt; vivos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        for (Inimigo inimigo : inimigos) {</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if (!inimigo.estaMorto()) {</span>
+<span class="fc" id="L182">                vivos.add(inimigo);</span>
+<span class="fc" id="L183">                vidasAntes.add(inimigo.getVidaAtual());</span>
+            }
+<span class="fc" id="L185">        }</span>
+<span class="fc" id="L186">        buraco.mirar(vivos);</span>
+<span class="fc" id="L187">        boolean usou = buraco.usar(jogador, null);</span>
+<span class="fc" id="L188">        habilidadesUsadas.add(buraco);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        if (!usou) {</span>
+<span class="fc" id="L190">            tela.mostrarErro(&quot;Buraco Negro indisponível (precisa do nível &quot;</span>
+                    + Jogador.NIVEL_BURACO_NEGRO + &quot;, da energia cheia e estar fora do cooldown)&quot;);
+<span class="fc" id="L192">            buraco.mirar(List.of());</span>
+<span class="fc" id="L193">            return false;</span>
+        }
+<span class="fc" id="L195">        tela.mostrarMensagem(jogador.getNome() + &quot; abriu um Buraco Negro!&quot;);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        for (int i = 0; i &lt; vivos.size(); i++) {</span>
+<span class="fc" id="L197">            Inimigo inimigo = vivos.get(i);</span>
+<span class="fc" id="L198">            int dano = vidasAntes.get(i) - inimigo.getVidaAtual();</span>
+<span class="fc" id="L199">            tela.mostrarAtaque(jogador.getNome() + &quot; (Buraco Negro)&quot;, inimigo, dano);</span>
+<span class="fc" id="L200">            registrarAcerto(dano);</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">            if (inimigo.estaMorto()) {</span>
+<span class="fc" id="L202">                recompensar(inimigo);</span>
+            }
+        }
+<span class="fc" id="L205">        return true;</span>
+    }
+
+    //Todo acerto do jogador devolve um pouco de energia
+    private void registrarAcerto(int dano) {
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (dano &gt; 0) {</span>
+<span class="fc" id="L211">            jogador.registrarAcerto();</span>
+        }
+<span class="fc" id="L213">    }</span>
+
+    //Aqui as exceções do modelo são TRATADAS: em vez de derrubar o
+    //programa, viram uma mensagem de erro na tela e devolvem false
+    public boolean usarItem(String id) {
+        try {
+<span class="fc" id="L219">            jogador.usarItem(id);</span>
+<span class="fc" id="L220">            tela.mostrarMensagem(jogador.getNome() + &quot; usou &quot; + id);</span>
+<span class="fc" id="L221">            return true;</span>
+<span class="fc" id="L222">        } catch (JogoException e) {</span>
+<span class="fc" id="L223">            tela.mostrarErro(e.getMessage());</span>
+<span class="fc" id="L224">            return false;</span>
+        }
+    }
+
+    //Usa o Raio de Gelo do próprio jogador (liberado no nível 2)
+    public boolean usarGelo(Inimigo alvo) {
+<span class="fc" id="L230">        return usarHabilidade(jogador.getGelo(), alvo);</span>
+    }
+
+    public boolean equiparArma(String idArma) {
+        try {
+<span class="fc" id="L235">            jogador.equiparArma(idArma);</span>
+<span class="fc" id="L236">            tela.mostrarMensagem(jogador.getNome() + &quot; equipou &quot; + jogador.getArma().getNome());</span>
+<span class="fc" id="L237">            return true;</span>
+<span class="fc" id="L238">        } catch (JogoException e) {</span>
+<span class="fc" id="L239">            tela.mostrarErro(e.getMessage());</span>
+<span class="fc" id="L240">            return false;</span>
+        }
+    }
+
+    //Tiro que atravessa (Perfurante): passa pela fila de inimigos na
+    //ordem da lista. Quem morrer com o tiro também dá XP
+    public void dispararPerfurante(RifleSniper rifle) {
+<span class="fc" id="L247">        List&lt;Integer&gt; vidasAntes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        for (Inimigo inimigo : inimigos) {</span>
+<span class="fc" id="L249">            vidasAntes.add(inimigo.getVidaAtual());</span>
+<span class="fc" id="L250">        }</span>
+<span class="fc" id="L251">        rifle.disparar(new ArrayList&lt;&gt;(inimigos));</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        for (int i = 0; i &lt; inimigos.size(); i++) {</span>
+<span class="fc" id="L253">            Inimigo inimigo = inimigos.get(i);</span>
+<span class="fc" id="L254">            int dano = vidasAntes.get(i) - inimigo.getVidaAtual();</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if (dano &gt; 0) {</span>
+<span class="fc" id="L256">                tela.mostrarAtaque(jogador.getNome() + &quot; (&quot; + rifle.getNome() + &quot;)&quot;, inimigo, dano);</span>
+<span class="fc" id="L257">                registrarAcerto(dano);</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">                if (inimigo.estaMorto()) {</span>
+<span class="fc" id="L259">                    recompensar(inimigo);</span>
+                }
+            }
+        }
+<span class="fc" id="L263">    }</span>
+
+    public boolean jogadorVenceu() {
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        for (Inimigo inimigo : inimigos) {</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">            if (!inimigo.estaMorto()) {</span>
+<span class="fc" id="L268">                return false;</span>
+            }
+<span class="fc" id="L270">        }</span>
+<span class="fc" id="L271">        return true;</span>
+    }
+
+    public boolean jogadorPerdeu() {
+<span class="fc" id="L275">        return jogador.estaMorto();</span>
+    }
+
+    public List&lt;Inimigo&gt; getInimigos() {
+<span class="fc" id="L279">        return List.copyOf(inimigos);</span>
+    }
+
+    //getExperienciaConcedida() é polimórfico: cada tipo de inimigo
+    //devolve o próprio valor
+    private void recompensar(Inimigo derrotado) {
+<span class="fc" id="L285">        int xp = derrotado.getExperienciaConcedida();</span>
+<span class="fc" id="L286">        int nivelAntes = jogador.getNivel().getNivelAtual();</span>
+<span class="fc" id="L287">        boolean subiu = jogador.ganharExperiencia(xp);</span>
+<span class="fc" id="L288">        tela.mostrarRecompensa(derrotado, xp);</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        if (subiu) {</span>
+<span class="fc" id="L290">            tela.mostrarSubidaDeNivel(jogador, nivelAntes);</span>
+        }
+<span class="fc" id="L292">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

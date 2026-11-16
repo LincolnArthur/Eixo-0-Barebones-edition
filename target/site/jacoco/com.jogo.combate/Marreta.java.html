@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Marreta.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.combate</a> &gt; <span class="el_source">Marreta.java</span></div><h1>Marreta.java</h1><pre class="source lang-java linenums">package com.jogo.combate;
+
+import com.jogo.personagens.Personagem;
+import com.jogo.personagens.Sniper;
+
+// Arma pesada com dano contundente.
+// Possui bônus de dano contra inimigos do tipo Sniper.
+public class Marreta extends Arma {
+    private static final int BONUS_DANO_CONTRA_SNIPER = 10;
+
+    private final int dano;
+//lerda e da mais dano em sniper
+    public Marreta(String id, String nome, String descricao, int dano, double chanceCritico, double tempoEspera) {
+<span class="fc" id="L14">        super(id, nome, descricao, chanceCritico, tempoEspera);</span>
+<span class="fc" id="L15">        this.dano = dano;</span>
+<span class="fc" id="L16">    }</span>
+
+    // Por padrão a Marreta é lenta: 1.8s entre golpes (~0.55 golpes/segundo)
+    public Marreta(String id, String nome, String descricao, int dano, double chanceCritico) {
+<span class="fc" id="L20">        this(id, nome, descricao, dano, chanceCritico, 1.8);</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    protected int calcularDanoBase() {
+<span class="nc" id="L25">        return dano;</span>
+    }
+
+    // Sobrescrita polimórfica: se o alvo for um Sniper, aplica o bônus de dano
+    @Override
+    protected int calcularDanoBase(Personagem alvo) {
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (alvo instanceof Sniper) {</span>
+<span class="fc" id="L32">            return dano + BONUS_DANO_CONTRA_SNIPER;</span>
+        }
+<span class="fc" id="L34">        return dano;</span>
+    }
+
+    public int getBonusDanoContraSniper() {
+<span class="nc" id="L38">        return BONUS_DANO_CONTRA_SNIPER;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

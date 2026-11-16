@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NpcCurandeiro.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">NpcCurandeiro.java</span></div><h1>NpcCurandeiro.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import java.util.List;
+
+//NPC que conversa e também cura o jogador (vida cheia) ao interagir.
+//Igual ao FXGL: cada cura custa energia do jogador (custoEnergia) e gasta
+//uma das curas da curandeira, então não vira vida infinita. De vida
+//cheia, ou sem energia suficiente, nada é gasto.
+public class NpcCurandeiro extends Npc {
+
+    public static final int CUSTO_ENERGIA_PADRAO = 20;
+    public static final int CURAS_PADRAO = 3;
+
+    private int curasRestantes;
+    private final int custoEnergia;
+
+    public NpcCurandeiro(String nome, List&lt;String&gt; falas, int curas) {
+<span class="fc" id="L18">        this(nome, falas, curas, CUSTO_ENERGIA_PADRAO);</span>
+<span class="fc" id="L19">    }</span>
+
+    public NpcCurandeiro(String nome, List&lt;String&gt; falas, int curas, int custoEnergia) {
+<span class="fc" id="L22">        super(nome, falas);</span>
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">        if (curas &lt; 0) {</span>
+<span class="nc" id="L24">            throw new IllegalArgumentException(&quot;Número de curas não pode ser negativo: &quot; + curas);</span>
+        }
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (custoEnergia &lt; 0) {</span>
+<span class="nc" id="L27">            throw new IllegalArgumentException(&quot;Custo de energia não pode ser negativo: &quot; + custoEnergia);</span>
+        }
+<span class="fc" id="L29">        this.curasRestantes = curas;</span>
+<span class="fc" id="L30">        this.custoEnergia = custoEnergia;</span>
+<span class="fc" id="L31">    }</span>
+
+    @Override
+    public String interagir(Personagem personagem) {
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (personagem == null) {</span>
+<span class="nc" id="L36">            throw new IllegalArgumentException(&quot;Jogador não pode ser nulo&quot;);</span>
+        }
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (personagem.estaMorto()) {</span>
+<span class="nc" id="L39">            return &quot;&quot;; //curar() não revive ninguém</span>
+        }
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (personagem.estaSaudavel()) {</span>
+<span class="fc" id="L42">            return &quot;Você está com a vida cheia, não precisa de cura.&quot;;</span>
+        }
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (curasRestantes &lt;= 0) {</span>
+<span class="fc" id="L45">            return &quot;Não tenho mais curas para dar.&quot;;</span>
+        }
+        //Só o Jogador tem energia pra pagar a cura
+<span class="pc bpc" id="L48" title="1 of 4 branches missed.">        if (!(personagem instanceof Jogador jogador) || !jogador.energiaSuficiente(custoEnergia)) {</span>
+<span class="fc" id="L49">            return &quot;Preciso de &quot; + custoEnergia + &quot; de energia sua pra te curar.&quot;;</span>
+        }
+<span class="fc" id="L51">        jogador.consumirEnergia(custoEnergia);</span>
+<span class="fc" id="L52">        jogador.curar(jogador.getVidaMaxima()); //curar() já limita na vida máxima</span>
+<span class="fc" id="L53">        curasRestantes--;</span>
+<span class="fc" id="L54">        return &quot;Vida de &quot; + jogador.getNome() + &quot; restaurada! (-&quot; + custoEnergia</span>
+                + &quot; de energia, curas restantes: &quot; + curasRestantes + &quot;)&quot;;
+    }
+
+    public int getCurasRestantes() {
+<span class="fc" id="L59">        return curasRestantes;</span>
+    }
+
+    public int getCustoEnergia() {
+<span class="nc" id="L63">        return custoEnergia;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

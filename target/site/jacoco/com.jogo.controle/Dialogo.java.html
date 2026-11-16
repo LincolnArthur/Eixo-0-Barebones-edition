@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dialogo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.controle</a> &gt; <span class="el_source">Dialogo.java</span></div><h1>Dialogo.java</h1><pre class="source lang-java linenums">package com.jogo.controle;
+
+import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Npc;
+import com.jogo.visao.TelaConsole;
+
+import java.util.List;
+
+//CONTROLE do MVC pras conversas, igual a Batalha é pro combate: decide a
+//ordem (fala, depois efeito, depois próxima fala), mexe no modelo (Npc,
+//Jogador) e manda a visão (TelaConsole) mostrar. Não imprime nada direto
+//e não guarda regra de NPC (quem cura e quantas curas ficam no modelo).
+public class Dialogo {
+
+    private final Jogador jogador;
+    private final TelaConsole tela;
+
+<span class="fc" id="L18">    public Dialogo(Jogador jogador, TelaConsole tela) {</span>
+<span class="pc bpc" id="L19" title="2 of 4 branches missed.">        if (jogador == null || tela == null) {</span>
+<span class="nc" id="L20">            throw new IllegalArgumentException(&quot;Dialogo precisa de um jogador e de uma tela&quot;);</span>
+        }
+<span class="fc" id="L22">        this.jogador = jogador;</span>
+<span class="fc" id="L23">        this.tela = tela;</span>
+<span class="fc" id="L24">    }</span>
+
+    //Jogador conversa com um NPC: mostra a fala atual, aplica o efeito do
+    //NPC (cura, dica...) e deixa a próxima fala pronta pra próxima conversa
+    public void conversar(Npc npc) {
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        if (npc == null) {</span>
+<span class="nc" id="L30">            throw new IllegalArgumentException(&quot;NPC não pode ser nulo&quot;);</span>
+        }
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (jogador.estaMorto()) {</span>
+<span class="nc" id="L33">            tela.mostrarErro(jogador.getNome() + &quot; está derrotado e não pode conversar&quot;);</span>
+<span class="nc" id="L34">            return;</span>
+        }
+<span class="fc" id="L36">        tela.mostrarMensagem(npc.getNome() + &quot;: \&quot;&quot; + npc.getFalaAtual() + &quot;\&quot;&quot;);</span>
+        //interagir() é polimorfico: o Informante não faz nada, o Curandeiro cura
+<span class="fc" id="L38">        String efeito = npc.interagir(jogador);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (!efeito.isEmpty()) {</span>
+<span class="fc" id="L40">            tela.mostrarMensagem(&quot;  [&quot; + npc.getNome() + &quot;] &quot; + efeito);</span>
+        }
+<span class="fc" id="L42">        npc.avancarFala();</span>
+<span class="fc" id="L43">    }</span>
+
+    //Conversa inteira: mostra todas as falas do NPC, uma de cada vez, e o
+    //Enter passa pra próxima (quando roda num terminal). Usada com o
+    //NEXUS: depois da última fala ele desperta
+    public void conversarAteOFim(Npc npc) {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (npc == null) {</span>
+<span class="nc" id="L50">            throw new IllegalArgumentException(&quot;NPC não pode ser nulo&quot;);</span>
+        }
+<span class="fc" id="L52">        int total = npc.getQuantidadeFalas();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (int i = 0; i &lt; total; i++) {</span>
+<span class="fc" id="L54">            conversar(npc);</span>
+<span class="fc" id="L55">            tela.esperarEnter();</span>
+        }
+<span class="fc" id="L57">    }</span>
+
+    //Conversa com todos os NPCs da lista (ex.: os de uma sala), na ordem.
+    //List&lt;? extends Npc&gt; aceita List&lt;Npc&gt;, List&lt;NpcCurandeiro&gt;...
+    public void conversarComTodos(List&lt;? extends Npc&gt; npcs) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (Npc npc : npcs) {</span>
+<span class="fc" id="L63">            conversar(npc);</span>
+<span class="fc" id="L64">        }</span>
+<span class="fc" id="L65">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

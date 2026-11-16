@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Npc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">Npc.java</span></div><h1>Npc.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import java.util.List;
+
+//NPC (personagem não jogável) amigável. É um Personagem, igual ao
+//Inimigo, mas do lado oposto: não ataca, não morre e só interage com o
+//jogador (conversar, curar...).
+//
+//Abstrata pelo mesmo motivo do Inimigo: cada tipo de NPC faz uma coisa
+//diferente ao interagir, então interagir() é abstrato e cada filha é
+//obrigada a escrever o seu (polimorfismo).
+//
+//As falas giram em ciclo: a cada conversa o NPC diz a próxima, e depois
+//da última volta pra primeira.
+public abstract class Npc extends Personagem {
+
+    private final List&lt;String&gt; falas;
+<span class="fc" id="L18">    private int indiceFala = 0;</span>
+
+    public Npc(String nome, List&lt;String&gt; falas) {
+        //Personagem exige vida &gt; 0, então o NPC tem vida 1. Ele nunca
+        //perde essa vida: o tomarDano() abaixo é de propósito sem efeito.
+<span class="fc" id="L23">        super(nome, 1);</span>
+<span class="pc bpc" id="L24" title="1 of 4 branches missed.">        if (falas == null || falas.isEmpty()) {</span>
+<span class="fc" id="L25">            throw new IllegalArgumentException(&quot;NPC precisa de pelo menos uma fala&quot;);</span>
+        }
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        for (String fala : falas) {</span>
+<span class="pc bpc" id="L28" title="1 of 4 branches missed.">            if (fala == null || fala.isBlank()) {</span>
+<span class="fc" id="L29">                throw new IllegalArgumentException(&quot;NPC não pode ter fala vazia&quot;);</span>
+            }
+<span class="fc" id="L31">        }</span>
+<span class="fc" id="L32">        this.falas = List.copyOf(falas); //cópia imutável: ninguém de fora muda as falas</span>
+<span class="fc" id="L33">    }</span>
+
+    //O que o NPC faz com o jogador ao interagir. Devolve a descrição do
+    //efeito pra visão mostrar (&quot;&quot; se não aconteceu nada): o modelo não
+    //imprime, igual ao resto do projeto.
+    public abstract String interagir(Personagem jogador);
+
+    //Invulnerável: nada que cause dano (golpe, tiro, armadilha) afeta o NPC
+    @Override
+    public void tomarDano(int quantidade) {
+        //de propósito sem efeito
+<span class="fc" id="L44">    }</span>
+
+    public String getFalaAtual() {
+<span class="fc" id="L47">        return falas.get(indiceFala);</span>
+    }
+
+    public int getQuantidadeFalas() {
+<span class="fc" id="L51">        return falas.size();</span>
+    }
+
+    //Se a fala atual é a última (o NpcChefe usa pra começar a luta)
+    protected boolean estaNaUltimaFala() {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        return indiceFala == falas.size() - 1;</span>
+    }
+
+    //Passa pra próxima fala; depois da última volta pra primeira
+    public String avancarFala() {
+<span class="fc" id="L61">        indiceFala = (indiceFala + 1) % falas.size();</span>
+<span class="fc" id="L62">        return getFalaAtual();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L67">        return getNome() + &quot; (NPC)&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

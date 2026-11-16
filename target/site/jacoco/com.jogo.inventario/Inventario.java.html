@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Inventario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.inventario</a> &gt; <span class="el_source">Inventario.java</span></div><h1>Inventario.java</h1><pre class="source lang-java linenums">package com.jogo.inventario;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Inventario {
+
+    private final Map&lt;String, Inventariavel&gt; itens; //Utiliza uma tabela hash pra definir os itens dos inventarios -lincoln
+    private final Map&lt;String, Integer&gt; quantidades;
+
+<span class="fc" id="L13">    public Inventario() { //Mesma coisa, lembrando que o Hash é encadeado -lincoln</span>
+<span class="fc" id="L14">        this.itens = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L15">        this.quantidades = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L16">    }</span>
+
+
+    //Para adicionar itens no inventario, tem que ver se faz stack ou não
+    //Resolvi usando dois tipos de ID na categoria isEmpilhavel
+    //Nesse caso ele implementa verificando cada um pelo Id
+    //Se for empilhavel, add e aumenta o contador
+    //Se não for, adiciona num espaço diferente do inventario -lincoln
+    public boolean adicionar(Inventariavel objeto) {
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (objeto == null) {</span>
+<span class="fc" id="L26">            return false;</span>
+        }
+<span class="fc" id="L28">        String id = objeto.getId();</span>
+
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (itens.containsKey(id) &amp;&amp; objeto.getCategoria().isEmpilhavel()) {</span>
+<span class="fc" id="L31">            quantidades.put(id, quantidades.get(id) + 1);</span>
+<span class="fc" id="L32">            return true;</span>
+        }
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (itens.containsKey(id)) {</span>
+<span class="fc" id="L36">            return false; // duplicata de algo não-empilhável, só pra garantir que não dê merda -lincoln</span>
+        }
+
+<span class="fc" id="L39">        itens.put(id, objeto);</span>
+<span class="fc" id="L40">        quantidades.put(id, 1);</span>
+<span class="fc" id="L41">        return true;</span>
+    }
+
+    public boolean remover(String id) { //Remover usando a mesma logica de add só que ao contrario -lincoln
+<span class="fc bfc" id="L45" title="All 4 branches covered.">        if (id == null || !itens.containsKey(id)) {</span>
+<span class="fc" id="L46">            return false;</span>
+        }
+<span class="fc" id="L48">        int restante = quantidades.get(id) - 1;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (restante &lt;= 0) {</span>
+<span class="fc" id="L50">            itens.remove(id);</span>
+<span class="fc" id="L51">            quantidades.remove(id);</span>
+        } else {
+<span class="fc" id="L53">            quantidades.put(id, restante);</span>
+        }
+<span class="fc" id="L55">        return true;</span>
+    }
+
+    public Inventariavel buscar(String id) { //Busca o item no inventario pelo id dele -lincoln
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (id == null) {</span>
+<span class="fc" id="L60">            return null;</span>
+        }
+<span class="fc" id="L62">        return itens.get(id);</span>
+    }
+
+    public int quantidadeDe(String id) {
+<span class="fc" id="L66">        return quantidades.getOrDefault(id, 0);</span>
+    }
+
+    public boolean temItem(String id) {
+<span class="fc" id="L70">        return itens.containsKey(id);</span>
+    }
+
+    public int quantidadeItem() {
+<span class="fc" id="L74">        return itens.size(); // quantidade de TIPOS distintos -lincoln</span>
+    }
+
+    public boolean inventarioVazio() {
+<span class="fc" id="L78">        return itens.isEmpty();</span>
+    }
+
+    public Map&lt;String, Inventariavel&gt; getItens() {
+<span class="fc" id="L82">        return Map.copyOf(itens);</span>
+    }
+
+    //Lista os itens de um tipo, na ordem em que entraram (o
+    //LinkedHashMap guarda a ordem). Método genérico: &lt;T&gt; é o tipo
+    //pedido, então listarDoTipo(Arma.class) já devolve List&lt;Arma&gt;,
+    //sem cast do lado de quem chama.
+    public &lt;T&gt; List&lt;T&gt; listarDoTipo(Class&lt;T&gt; tipo) {
+<span class="fc" id="L90">        List&lt;T&gt; encontrados = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (Inventariavel objeto : itens.values()) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (tipo.isInstance(objeto)) {</span>
+<span class="fc" id="L93">                encontrados.add(tipo.cast(objeto));</span>
+            }
+<span class="fc" id="L95">        }</span>
+<span class="fc" id="L96">        return encontrados;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

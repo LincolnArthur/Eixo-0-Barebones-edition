@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NpcChefe.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">eixo-0-barebones</a> &gt; <a href="index.source.html" class="el_package">com.jogo.personagens</a> &gt; <span class="el_source">NpcChefe.java</span></div><h1>NpcChefe.java</h1><pre class="source lang-java linenums">package com.jogo.personagens;
+
+import java.util.List;
+
+//O chefe antes da luta: NEXUS começa como um NPC (invulnerável, não
+//ataca) que conversa com o jogador. Quando a última fala é dita, a
+//conversa acaba e o NPC &quot;desperta&quot;: despertar() devolve o Chefe de
+//verdade, que entra na batalha. Igual ao NpcChefe do FXGL.
+public class NpcChefe extends Npc {
+
+    private final Chefe chefe;
+<span class="fc" id="L12">    private boolean conversaCompleta = false;</span>
+<span class="fc" id="L13">    private boolean despertou = false;</span>
+
+    public NpcChefe(String nome, List&lt;String&gt; falas, Chefe chefe) {
+<span class="fc" id="L16">        super(nome, falas);</span>
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        if (chefe == null) {</span>
+<span class="fc" id="L18">            throw new IllegalArgumentException(&quot;O NPC precisa saber em qual chefe vai se transformar&quot;);</span>
+        }
+<span class="fc" id="L20">        this.chefe = chefe;</span>
+<span class="fc" id="L21">    }</span>
+
+    //Só fala; quando a fala da vez é a última, a luta está pronta pra começar
+    @Override
+    public String interagir(Personagem jogador) {
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (estaNaUltimaFala()) {</span>
+<span class="fc" id="L27">            conversaCompleta = true;</span>
+<span class="fc" id="L28">            return getNome() + &quot; desperta! A luta começou.&quot;;</span>
+        }
+<span class="fc" id="L30">        return &quot;&quot;;</span>
+    }
+
+    public boolean conversaCompleta() {
+<span class="fc" id="L34">        return conversaCompleta;</span>
+    }
+
+    //Troca o NPC pelo chefe (uma vez só, e só depois da conversa inteira)
+    public Chefe despertar() {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (!conversaCompleta) {</span>
+<span class="fc" id="L40">            throw new IllegalStateException(getNome() + &quot; ainda não terminou de falar&quot;);</span>
+        }
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (despertou) {</span>
+<span class="fc" id="L43">            throw new IllegalStateException(getNome() + &quot; já despertou&quot;);</span>
+        }
+<span class="fc" id="L45">        despertou = true;</span>
+<span class="fc" id="L46">        return chefe;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
