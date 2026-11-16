@@ -1,6 +1,7 @@
 package com.jogo.habilidades;
 
 import com.jogo.combate.Ataque;
+import com.jogo.personagens.Inimigo;
 import com.jogo.personagens.Jogador;
 import com.jogo.personagens.Personagem;
 
@@ -20,6 +21,12 @@ public abstract class GolpeDeEnergia extends Habilidade {
         return dano;
     }
 
+    //Gancho: quantos turnos o alvo fica congelado. Padrão 0 (não
+    //congela); o RaioDeGelo sobrescreve.
+    public double getCongelamento() {
+        return 0;
+    }
+
     @Override
     public void executar(Jogador usuario, Personagem alvo) {
         if (alvo == null) {
@@ -27,5 +34,8 @@ public abstract class GolpeDeEnergia extends Habilidade {
         }
         Ataque ataque = new Ataque(dano);
         ataque.aplicarEm(alvo);
+        if (getCongelamento() > 0 && alvo instanceof Inimigo inimigo && !inimigo.estaMorto()) {
+            inimigo.congelar(getCongelamento());
+        }
     }
 }

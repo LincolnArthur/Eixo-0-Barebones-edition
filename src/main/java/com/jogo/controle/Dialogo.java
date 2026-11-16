@@ -42,6 +42,20 @@ public class Dialogo {
         npc.avancarFala();
     }
 
+    //Conversa inteira: mostra todas as falas do NPC, uma de cada vez, e o
+    //Enter passa pra próxima (quando roda num terminal). Usada com o
+    //NEXUS: depois da última fala ele desperta
+    public void conversarAteOFim(Npc npc) {
+        if (npc == null) {
+            throw new IllegalArgumentException("NPC não pode ser nulo");
+        }
+        int total = npc.getQuantidadeFalas();
+        for (int i = 0; i < total; i++) {
+            conversar(npc);
+            tela.esperarEnter();
+        }
+    }
+
     //Conversa com todos os NPCs da lista (ex.: os de uma sala), na ordem.
     //List<? extends Npc> aceita List<Npc>, List<NpcCurandeiro>...
     public void conversarComTodos(List<? extends Npc> npcs) {

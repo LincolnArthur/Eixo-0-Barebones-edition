@@ -4,6 +4,7 @@ import com.jogo.armadilhas.DamageTarget;
 import com.jogo.armadilhas.Trap;
 import com.jogo.inventario.Inventariavel;
 import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Npc;
 import com.jogo.personagens.Personagem;
 
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ public class Sala {
     private final List<Inimigo> inimigos;
     private final List<Inventariavel> itens;
     private final List<Trap> armadilhas;
+    // NPCs amigáveis que ficam nesta sala (ver NpcsDasSalas)
+    private final List<Npc> npcs;
 
     // Se é um ponto de salvamento/descanso (ex: banco de descanso)
     private boolean pontoDeSalvamento;
@@ -40,6 +43,7 @@ public class Sala {
         this.inimigos = new ArrayList<>();
         this.itens = new ArrayList<>();
         this.armadilhas = new ArrayList<>();
+        this.npcs = new ArrayList<>();
         this.pontoDeSalvamento = false;
     }
 
@@ -93,6 +97,16 @@ public class Sala {
 
     public List<Inimigo> getInimigos() {
         return Collections.unmodifiableList(inimigos);
+    }
+
+    public void adicionarNpc(Npc npc) {
+        if (npc != null) {
+            npcs.add(npc);
+        }
+    }
+
+    public List<Npc> getNpcs() {
+        return Collections.unmodifiableList(npcs);
     }
 
     public void adicionarItem(Inventariavel item) {

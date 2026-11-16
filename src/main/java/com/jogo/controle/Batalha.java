@@ -2,6 +2,7 @@ package com.jogo.controle;
 
 import com.jogo.combate.RifleSniper;
 import com.jogo.excecoes.JogoException;
+import com.jogo.habilidades.BuracoNegro;
 import com.jogo.habilidades.Habilidade;
 import com.jogo.habilidades.SandevistanMichyle;
 import com.jogo.personagens.Inimigo;
@@ -9,7 +10,9 @@ import com.jogo.personagens.Jogador;
 import com.jogo.visao.TelaConsole;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 //CONTROLE do MVC: decide a ordem das ações de uma batalha, mexe no
 //modelo (Jogador, Inimigo...) e manda a visão (TelaConsole) mostrar o
@@ -27,11 +30,16 @@ public class Batalha {
     private SandevistanMichyle sandevistan;
     private int turnosEmCameraLenta = 0;
     private static final double SEGUNDOS_POR_TURNO = 1.0;
+    //Habilidades já usadas nesta batalha: o cooldown delas anda 1 s por turno
+    private final Set<Habilidade> habilidadesUsadas = new LinkedHashSet<>();
 
     public Batalha(Jogador jogador, List<? extends Inimigo> inimigos, TelaConsole tela) {
         this.jogador = jogador;
         this.inimigos = new ArrayList<>(inimigos);
         this.tela = tela;
+        //As magias do próprio jogador sempre contam o cooldown nos turnos
+        habilidadesUsadas.add(jogador.getGelo());
+        habilidadesUsadas.add(jogador.getBuracoNegro());
     }
 
     //Jogador ataca um inimigo com a arma equipada. Se derrotar, ganha o XP
@@ -41,7 +49,9 @@ public class Batalha {
         }
         int vidaAntes = alvo.getVidaAtual();
         jogador.iniciarAtaque(alvo);
-        tela.mostrarAtaque(jogador.getNome() + " (" + jogador.getArma().getNome() + ")", alvo, vidaAntes - alvo.getVidaAtual());
+        int dano = vidaAntes - alvo.getVidaAtual();
+        tela.mostrarAtaque(jogador.getNome() + " (" + jogador.getArma().getNome() + ")", alvo, dano);
+        registrarAcerto(dano);
         if (alvo.estaMorto()) {
             recompensar(alvo);
         }
@@ -50,6 +60,7 @@ public class Batalha {
     //Todos os inimigos vivos atacam o jogador. Mesma chamada
     //(iniciarAtaque) pra todos; o dano depende da arma de cada um
     public void turnoDosInimigos() {
+        jogador.atualizar(SEGUNDOS_POR_TURNO); //invencibilidade depois de dano anda 1 s
         if (sandevistanLigado()) {
             turnosEmCameraLenta++;
             int turnosPorAcao = (int) Math.round(1 / SandevistanMichyle.ESCALA_TEMPO);
@@ -63,9 +74,25 @@ public class Batalha {
             if (inimigo.estaMorto() || jogador.estaMorto()) {
                 continue;
             }
+            //Congelado (Raio de Gelo): perde o turno
+            if (inimigo.passarTurnoCongelado()) {
+                tela.mostrarMensagem(inimigo.getNome() + " está congelado e perde o turno.");
+                continue;
+            }
             int vidaAntes = jogador.getVidaAtual();
             inimigo.iniciarAtaque(jogador);
-            tela.mostrarAtaque(inimigo.getNome(), jogador, vidaAntes - jogador.getVidaAtual());
+            int dano = vidaAntes - jogador.getVidaAtual();
+            //Polimorfismo: o inimigo comum não tem nada a descrever; o
+            //Chefe descreve o aviso ou o ataque da vez
+            String descricao = inimigo.descreverUltimaAcao();
+            if (descricao.isEmpty()) {
+                tela.mostrarAtaque(inimigo.getNome(), jogador, dano);
+            } else {
+                tela.mostrarMensagem(descricao);
+                if (dano > 0) {
+                    tela.mostrarAtaque(inimigo.getNome() + " (" + inimigo.getNomeAtaque() + ")", jogador, dano);
+                }
+            }
         }
         passarTempo();
     }
@@ -96,8 +123,13 @@ public class Batalha {
         return sandevistan != null && sandevistan.estaAtivo();
     }
 
-    //Cada turno conta como 1 segundo pra Sandevistan e pra Cyberpsicose
+    //Cada turno conta como 1 segundo: cooldown das habilidades, recarga de
+    //energia (a partir do nível 6), Sandevistan e Cyberpsicose
     private void passarTempo() {
+        for (Habilidade habilidade : habilidadesUsadas) {
+            habilidade.atualizar(SEGUNDOS_POR_TURNO);
+        }
+        jogador.recarregarEnergiaPorTurno();
         if (sandevistan == null) {
             return;
         }
@@ -118,6 +150,7 @@ public class Batalha {
         String nome = habilidade.getClass().getSimpleName();
         int vidaAntes = alvo == null ? 0 : alvo.getVidaAtual();
         boolean usou = habilidade.usar(jogador, alvo);
+        habilidadesUsadas.add(habilidade);
         if (!usou) {
             tela.mostrarErro("Não deu pra usar " + nome + " agora (cooldown ou energia)");
             return false;
@@ -125,12 +158,58 @@ public class Batalha {
         if (alvo == null) {
             tela.mostrarMensagem(jogador.getNome() + " usou " + nome);
         } else {
-            tela.mostrarAtaque(jogador.getNome() + " (" + nome + ")", alvo, vidaAntes - alvo.getVidaAtual());
+            int dano = vidaAntes - alvo.getVidaAtual();
+            tela.mostrarAtaque(jogador.getNome() + " (" + nome + ")", alvo, dano);
+            registrarAcerto(dano);
+            if (alvo.estaCongelado()) {
+                tela.mostrarMensagem(alvo.getNome() + " ficou congelado por "
+                        + Math.round(alvo.getTurnosCongelado()) + " turno(s).");
+            }
             if (alvo.estaMorto()) {
                 recompensar(alvo);
             }
         }
         return true;
+    }
+
+    //Buraco Negro: atinge todos os inimigos vivos da batalha de uma vez
+    public boolean usarBuracoNegro() {
+        BuracoNegro buraco = jogador.getBuracoNegro();
+        List<Integer> vidasAntes = new ArrayList<>();
+        List<Inimigo> vivos = new ArrayList<>();
+        for (Inimigo inimigo : inimigos) {
+            if (!inimigo.estaMorto()) {
+                vivos.add(inimigo);
+                vidasAntes.add(inimigo.getVidaAtual());
+            }
+        }
+        buraco.mirar(vivos);
+        boolean usou = buraco.usar(jogador, null);
+        habilidadesUsadas.add(buraco);
+        if (!usou) {
+            tela.mostrarErro("Buraco Negro indisponível (precisa do nível "
+                    + Jogador.NIVEL_BURACO_NEGRO + ", da energia cheia e estar fora do cooldown)");
+            buraco.mirar(List.of());
+            return false;
+        }
+        tela.mostrarMensagem(jogador.getNome() + " abriu um Buraco Negro!");
+        for (int i = 0; i < vivos.size(); i++) {
+            Inimigo inimigo = vivos.get(i);
+            int dano = vidasAntes.get(i) - inimigo.getVidaAtual();
+            tela.mostrarAtaque(jogador.getNome() + " (Buraco Negro)", inimigo, dano);
+            registrarAcerto(dano);
+            if (inimigo.estaMorto()) {
+                recompensar(inimigo);
+            }
+        }
+        return true;
+    }
+
+    //Todo acerto do jogador devolve um pouco de energia
+    private void registrarAcerto(int dano) {
+        if (dano > 0) {
+            jogador.registrarAcerto();
+        }
     }
 
     //Aqui as exceções do modelo são TRATADAS: em vez de derrubar o
@@ -144,6 +223,11 @@ public class Batalha {
             tela.mostrarErro(e.getMessage());
             return false;
         }
+    }
+
+    //Usa o Raio de Gelo do próprio jogador (liberado no nível 2)
+    public boolean usarGelo(Inimigo alvo) {
+        return usarHabilidade(jogador.getGelo(), alvo);
     }
 
     public boolean equiparArma(String idArma) {
@@ -170,6 +254,7 @@ public class Batalha {
             int dano = vidasAntes.get(i) - inimigo.getVidaAtual();
             if (dano > 0) {
                 tela.mostrarAtaque(jogador.getNome() + " (" + rifle.getNome() + ")", inimigo, dano);
+                registrarAcerto(dano);
                 if (inimigo.estaMorto()) {
                     recompensar(inimigo);
                 }
@@ -198,7 +283,11 @@ public class Batalha {
     //devolve o próprio valor
     private void recompensar(Inimigo derrotado) {
         int xp = derrotado.getExperienciaConcedida();
-        jogador.ganharExperiencia(xp);
+        int nivelAntes = jogador.getNivel().getNivelAtual();
+        boolean subiu = jogador.ganharExperiencia(xp);
         tela.mostrarRecompensa(derrotado, xp);
+        if (subiu) {
+            tela.mostrarSubidaDeNivel(jogador, nivelAntes);
+        }
     }
 }

@@ -1,9 +1,289 @@
 classDiagram
-direction LR
+direction TB
+namespace armadilhas {
+  class BlocoQueCai {
+    -initialY : double
+    -currentY : double
+    -velocityY : double
+    -gravity : double
+    -maxFallDistance : double
+    -retractionSpeed : double
+    -groundStayDuration : double
+    -groundTimer : double
+    -hitGround : boolean
+    +BlocoQueCai(double, double, double, double)
+    +BlocoQueCai(double, double, double, double, double, double, int)
+    #updateActive(double)
+    #updateCustom(double)
+    +onImpact()
+    +onReset()
+    +isDangerous() boolean
+    +checkCollision(DamageTarget) boolean
+    +applyDamage(DamageTarget)
+    #renderContent(Graphics, double, double)
+    +getInitialY() double
+    +getVelocityY() double
+    +getMaxFallDistance() double
+    +setMaxFallDistance(double)
+    +alignWithGroundSurface(double)
+    +getGroundStayDuration() double
+    +setGroundStayDuration(double)
+    +hasHitGround() boolean
+  }
+  class DamageSource {
+    <<interface>>
+    +getDamage()* int
+    +getKnockbackForce()* double
+    +getName()* String
+  }
+  class DamageTarget {
+    <<interface>>
+    +takeDamage(int, DamageSource)*
+    +applyKnockback(double, double)*
+    +getX()* double
+    +getY()* double
+    +getHitbox()* Hitbox
+    +isAlive()* boolean
+    +isInvulnerable() boolean
+    +activateInvulnerability(double)
+  }
+  class Hitbox {
+    -offsetX : double
+    -offsetY : double
+    -width : double
+    -height : double
+    +Hitbox(double, double, double, double)
+    +getOffsetX() double
+    +setOffsetX(double)
+    +getOffsetY() double
+    +setOffsetY(double)
+    +getWidth() double
+    +setWidth(double)
+    +getHeight() double
+    +setHeight(double)
+    +getMinX(double) double
+    +getMaxX(double) double
+    +getMinY(double) double
+    +getMaxY(double) double
+    +intersects(double, double, Hitbox, double, double) boolean
+    +toAwtRectangle(double, double) Rectangle
+    +toString() String
+  }
+  class SpikesRetrateis {
+    -numberOfSpikes : int
+    -spikeExtensionRatio : double
+    -cyclic : boolean
+    +SpikesRetrateis(double, double, double, double)
+    +SpikesRetrateis(double, double, double, double, double, double, double, double, int)
+    #transitionTo(TrapState)
+    #updateCustom(double)
+    #updateInactive(double)
+    #renderContent(Graphics, double, double)
+    +getNumberOfSpikes() int
+    +setNumberOfSpikes(int)
+    +getSpikeExtensionRatio() double
+    +isCyclic() boolean
+    +setCyclic(boolean)
+  }
+  class Trap {
+    <<abstract>>
+    #name : String
+    #x : double
+    #y : double
+    #width : double
+    #height : double
+    #damageHitbox : Hitbox
+    #triggerBox : Hitbox
+    #state : TrapState
+    #stateTimer : double
+    #inactiveDuration : double
+    #telegraphDuration : double
+    #activeDuration : double
+    #cooldownDuration : double
+    #damage : int
+    #knockbackForce : double
+    #invulnerabilityGrantDuration : double
+    #shakeIntensity : double
+    #shakeOffsetX : double
+    #shakeOffsetY : double
+    #listeners : List~TrapListener~
+    #debugHitboxes : boolean
+    +Trap(String, double, double, double, double)
+    +update(double)
+    #updateInactive(double)
+    #updateTelegraphing(double)
+    #updateActive(double)
+    #updateCooldown(double)
+    +onTrigger()
+    +onReset()
+    #transitionTo(TrapState)
+    +checkTrigger(DamageTarget) boolean
+    +checkCollision(DamageTarget) boolean
+    +applyDamage(DamageTarget)
+    +render(Graphics)
+    #renderContent(Graphics, double, double)*
+    #renderTelegraphEffect(Graphics, double, double)
+    #renderDebugBounds(Graphics2D)
+    #updateCustom(double)
+    +addListener(TrapListener)
+    +removeListener(TrapListener)
+    #notifyTelegraphStarted(double)
+    #notifyTriggered()
+    #notifyImpact()
+    +getInvulnerabilityGrantDuration() double
+    +setInvulnerabilityGrantDuration(double)
+    +getDamage() int
+    +setDamage(int)
+    +getKnockbackForce() double
+    +setKnockbackForce(double)
+    +getName() String
+    +getX() double
+    +setX(double)
+    +getY() double
+    +setY(double)
+    +getWidth() double
+    +getHeight() double
+    +getDamageHitbox() Hitbox
+    +setDamageHitbox(Hitbox)
+    +getTriggerBox() Hitbox
+    +setTriggerBox(Hitbox)
+    +getState() TrapState
+    +getStateTimer() double
+    +getInactiveDuration() double
+    +setInactiveDuration(double)
+    +getTelegraphDuration() double
+    +setTelegraphDuration(double)
+    +getActiveDuration() double
+    +setActiveDuration(double)
+    +getCooldownDuration() double
+    +setCooldownDuration(double)
+    +isDebugHitboxes() boolean
+    +setDebugHitboxes(boolean)
+    +getShakeOffsetX() double
+    +getShakeOffsetY() double
+    +toString() String
+  }
+  class TrapFactory {
+    -TrapFactory()
+    +createSpikes(double, double, double, double)$ SpikesRetrateis
+    +createSpikes(double, double, double, double, double, double, double, double, int)$ SpikesRetrateis
+    +createFallingBlock(double, double, double, double, double)$ BlocoQueCai
+    +createFromTileCoordinates(String, int, int, int, Map~String, Object~)$ Trap
+    +createFromTileData(String, double, double, Map~String, Object~)$ Trap
+    -getDouble(Map~String, Object~, String, double)$ double
+    -getInt(Map~String, Object~, String, int)$ int
+  }
+  class TrapGenerationConfig {
+    -minTraps : int
+    -maxTraps : int
+    -spawnChance : double
+    -seed : Long
+    -safeZoneRadius : double
+    -minDistanceBetweenTraps : double
+    -portalSafeMargin : double
+    -gridStepX : double
+    -platformEdgeMargin : double
+    -maxCeilingTopY : double
+    -spikeWidth : double
+    -spikeHeight : double
+    -minTopClearance : double
+    -blockWidth : double
+    -blockHeight : double
+    -minFallClearance : double
+    +TrapGenerationConfig()
+    +TrapGenerationConfig(int, int, double, Long)
+    +padrao()$ TrapGenerationConfig
+    +comSeed(long)$ TrapGenerationConfig
+    +withMinTraps(int) TrapGenerationConfig
+    +withMaxTraps(int) TrapGenerationConfig
+    +withSpawnChance(double) TrapGenerationConfig
+    +withSeed(Long) TrapGenerationConfig
+    +withRandomSeed() TrapGenerationConfig
+    +withSafeZoneRadius(double) TrapGenerationConfig
+    +withMinDistanceBetweenTraps(double) TrapGenerationConfig
+    +withPortalSafeMargin(double) TrapGenerationConfig
+    +withGridStepX(double) TrapGenerationConfig
+    +withSpikeDimensions(double, double) TrapGenerationConfig
+    +withBlockDimensions(double, double) TrapGenerationConfig
+    +withMinTopClearance(double) TrapGenerationConfig
+    +withMinFallClearance(double) TrapGenerationConfig
+    +withMaxCeilingTopY(double) TrapGenerationConfig
+    +getMinTraps() int
+    +setMinTraps(int)
+    +getMaxTraps() int
+    +setMaxTraps(int)
+    +getSpawnChance() double
+    +setSpawnChance(double)
+    +getSeed() Long
+    +setSeed(Long)
+    +getSafeZoneRadius() double
+    +setSafeZoneRadius(double)
+    +getMinDistanceBetweenTraps() double
+    +setMinDistanceBetweenTraps(double)
+    +getPortalSafeMargin() double
+    +setPortalSafeMargin(double)
+    +getGridStepX() double
+    +setGridStepX(double)
+    +getPlatformEdgeMargin() double
+    +setPlatformEdgeMargin(double)
+    +getSpikeWidth() double
+    +getSpikeHeight() double
+    +getMinTopClearance() double
+    +getBlockWidth() double
+    +getBlockHeight() double
+    +getMinFallClearance() double
+    +getMaxCeilingTopY() double
+    +setMaxCeilingTopY(double)
+  }
+  class TrapListener {
+    <<interface>>
+    +onStateChanged(Trap, TrapState, TrapState)
+    +onTelegraphStarted(Trap, double)
+    +onTriggered(Trap)
+    +onDamageDealt(Trap, DamageTarget, int)
+    +onImpact(Trap)
+    +onReset(Trap)
+  }
+  class TrapProceduralGenerator {
+    -config : TrapGenerationConfig
+    +TrapProceduralGenerator()
+    +TrapProceduralGenerator(long)
+    +TrapProceduralGenerator(boolean)
+    +TrapProceduralGenerator(TrapGenerationConfig)
+    +getConfig() TrapGenerationConfig
+    +setConfig(TrapGenerationConfig)
+    +generateTraps(List~PlatformBounds~, double, double, double, double) List~Trap~
+    +generateTraps(List~PlatformBounds~, double, double, double, double, Long) List~Trap~
+    +generatePlacements(List~PlatformBounds~, double, double, double, double) List~TrapPlacement~
+    +generatePlacements(List~PlatformBounds~, double, double, double, double, Long) List~TrapPlacement~
+    -findCeilingBlockCandidates(List~PlatformBounds~, double, double, double) List~TrapPlacement~
+    -findFloorSpikeCandidates(List~PlatformBounds~, double, double, double) List~TrapPlacement~
+    -findMainGroundBelow(List~PlatformBounds~, PlatformBounds, double, double, double) double
+    -isVerticalCorridorClear(List~PlatformBounds~, PlatformBounds, double, double, double, double) boolean
+    -isTopClearanceFree(List~PlatformBounds~, PlatformBounds, double, double, double, double) boolean
+    -isWithinLevelSafeBounds(double, double, double) boolean
+    -isInsidePlayerSafeZone(double, double, double, double, double, double) boolean
+    -respectsMinDistance(TrapPlacement, List~TrapPlacement~) boolean
+    -interleaveCandidates(List~TrapPlacement~, List~TrapPlacement~) List~TrapPlacement~
+  }
+  class TrapSpawner {
+    +TrapSpawner()
+    +TrapSpawner(long)
+    +TrapSpawner(boolean)
+    +TrapSpawner(TrapGenerationConfig)
+  }
+  class TrapState {
+    +values()$ TrapState[]
+    +valueOf(String)$ TrapState
+    -TrapState()
+  }
+}
 namespace combate {
   class AdagaDupla {
     -dano : int
     -contadorGolpes : int
+    +AdagaDupla(String, String, String, int, double, double)
+    +AdagaDupla(String, String, String, int, double)
     #calcularDanoBase() int
     +reiniciarCombo()
   }
@@ -16,6 +296,14 @@ namespace combate {
     -nome : String
     -descricao : String
     -tempoEspera : double
+    +Arma(String, String, String, double, double)
+    +Arma(String, String, String, double)
+    +getId() String
+    +getNome() String
+    +getDescricao() String
+    +getCategoria() Categoria
+    +getTempoEspera() double
+    +getVelocidadeAtaque() double
     +causarDano() int
     +causarDano(Personagem) int
     #calcularDanoBase(Personagem) int
@@ -23,6 +311,7 @@ namespace combate {
   }
   class ArmaDeFogo {
     -dano : int
+    +ArmaDeFogo(String, String, String, int, double)
     #dispararProjetil() int
     #calcularDanoBase() int
   }
@@ -37,6 +326,8 @@ namespace combate {
   }
   class Ataque {
     -dano : int
+    +Ataque(int)
+    +getDano() int
     +aplicarEm(Atacavel)
   }
   class ConcedeExperiencia {
@@ -45,36 +336,47 @@ namespace combate {
   }
   class Espada {
     -dano : int
+    +Espada(String, String, String, int, double)
     #calcularDanoBase() int
   }
   class Marreta {
     -dano : int
+    +Marreta(String, String, String, int, double, double)
+    +Marreta(String, String, String, int, double)
     #calcularDanoBase() int
     #calcularDanoBase(Personagem) int
+    +getBonusDanoContraSniper() int
   }
   class Perfurante {
     <<interface>>
     +getAlvosAtravessados()* int
   }
   class PistolaDuplaDePlasma {
+    +PistolaDuplaDePlasma(String, String, String, int, double)
     #calcularDanoBase() int
   }
   class Projetil {
     -dano : int
+    +Projetil(int)
+    +getDano() int
     +atingir(List~Personagem~)
     +atingir(List~Personagem~, int)
   }
   class RifleSniper {
     -alvosAtravessados : int
+    +RifleSniper(String, String, String, int, double, int)
+    +getAlvosAtravessados() int
     +disparar(List~Personagem~)
   }
   class Sabre {
     -dano : int
     -golpe : int
+    +Sabre(String, String, String, int, double, double)
     +calcularDanoBase() int
   }
   class Shotgun {
     -quantidadeBalins : int
+    +Shotgun(String, String, String, int, int, double)
     #calcularDanoBase() int
   }
 }
@@ -83,39 +385,100 @@ namespace controle {
     -jogador : Jogador
     -inimigos : List~Inimigo~
     -tela : TelaConsole
+    -sandevistan : SandevistanMichyle
+    -turnosEmCameraLenta : int
+    -habilidadesUsadas : Set~Habilidade~
+    +Batalha(Jogador, List~Inimigo~, TelaConsole)
     +jogadorAtaca(Inimigo)
     +turnoDosInimigos()
+    +alternarSandevistan(SandevistanMichyle) boolean
+    +sandevistanLigado() boolean
+    -passarTempo()
     +usarHabilidade(Habilidade, Inimigo) boolean
+    +usarBuracoNegro() boolean
+    -registrarAcerto(int)
     +usarItem(String) boolean
+    +usarGelo(Inimigo) boolean
     +equiparArma(String) boolean
     +dispararPerfurante(RifleSniper)
     +jogadorVenceu() boolean
     +jogadorPerdeu() boolean
+    +getInimigos() List~Inimigo~
+    -recompensar(Inimigo)
+  }
+  class Dialogo {
+    -jogador : Jogador
+    -tela : TelaConsole
+    +Dialogo(Jogador, TelaConsole)
+    +conversar(Npc)
+    +conversarAteOFim(Npc)
+    +conversarComTodos(List~Npc~)
   }
 }
 namespace excecoes {
   class ItemIncompativelException {
+    +ItemIncompativelException(String, String)
   }
   class ItemNaoEncontradoException {
     -idItem : String
+    +ItemNaoEncontradoException(String)
+    +getIdItem() String
   }
   class JogoException {
+    +JogoException(String)
   }
   class SalaNaoEncontradaException {
+    +SalaNaoEncontradaException(String)
   }
 }
 namespace habilidades {
   class Apara {
+    +Apara(boolean, double, int, double)
     +executar(Jogador, Personagem)
   }
   class BolaDeFogo {
+    +BolaDeFogo(boolean, double, int, double, int)
+  }
+  class BuracoNegro {
+    -alvos : List~Personagem~
+    +BuracoNegro(boolean, double)
+    +custoPara(Jogador) int
+    +mirar(List~Personagem~)
+    +executar(Jogador, Personagem)
+    -danoPara(Personagem) int
+  }
+  class Cyberpsicose {
+    -ativo : boolean
+    -vidaLimite : int
+    -timerDano : double
+    -sandevistanAcabou : boolean
+    +Cyberpsicose()
+    +aplicar(Personagem)
+    +remover(Personagem)
+    +marcarFimDoSandevistan()
+    +atualizar(Personagem, double) boolean
+    +estaAtivo() boolean
+    +getNome() String
+    +estaNoLimiteVida(Jogador) boolean
   }
   class Dash {
+    +Dash(boolean, double, int, double)
     +executar(Jogador, Personagem)
+  }
+  class Efeito {
+    <<interface>>
+    +aplicar(Personagem)*
+    +remover(Personagem)*
+    +atualizar(Personagem, double)* boolean
+    +estaAtivo()* boolean
+    +getNome()* String
   }
   class GolpeDeEnergia {
     <<abstract>>
     -dano : int
+    +GolpeDeEnergia(boolean, double, int, double, int)
+    +getDano() int
+    +getCongelamento() double
     +executar(Jogador, Personagem)
   }
   class Habilidade {
@@ -125,14 +488,48 @@ namespace habilidades {
     -tempoRestante : double
     -duracao : double
     -custoEnergia : int
+    +Habilidade(boolean, double, int, double)
     +atualizar(double)
+    +getTempoEspera() double
+    +getDuracao() double
+    +getCustoEnergia() int
+    +isAprendida() boolean
+    +setTempoEspera(double)
+    +setAprendida(boolean)
     +estaDisponivel() boolean
+    +setCustoEnergia(int)
+    +setDuracao(double)
     +podeUsar(Jogador) boolean
+    +custoPara(Jogador) int
+    +getTempoRestante() double
     +usar(Jogador, Personagem) boolean
     +executar(Jogador, Personagem)*
   }
   class PuloDuplo {
+    +PuloDuplo(boolean, double, int, double)
     +executar(Jogador, Personagem)
+  }
+  class RaioDeGelo {
+    -turnosCongelado : double
+    +RaioDeGelo(boolean, double, int, int, double)
+    +getCongelamento() double
+  }
+  class SandevistanMichyle {
+    -sorteio : Random
+    -cyberpsicose : Cyberpsicose
+    -ativo : boolean
+    -acumuladorConsumo : double
+    -cooldownPosDesativar : double
+    +SandevistanMichyle(boolean)
+    +SandevistanMichyle(boolean, Random)
+    +podeUsar(Jogador) boolean
+    +executar(Jogador, Personagem)
+    -ativar(Jogador)
+    -desativar(Jogador)
+    +atualizarSandevistan(Jogador, double)
+    +estaAtivo() boolean
+    +getCooldownRestante() double
+    +getCyberpsicose() Cyberpsicose
   }
 }
 namespace inventario {
@@ -140,6 +537,8 @@ namespace inventario {
     -empilhavel : boolean
     +values()$ Categoria[]
     +valueOf(String)$ Categoria
+    -Categoria(boolean)
+    +isEmpilhavel() boolean
   }
   class Consumivel {
     <<interface>>
@@ -155,6 +554,7 @@ namespace inventario {
   class Inventario {
     -itens : Map~String, Inventariavel~
     -quantidades : Map~String, Integer~
+    +Inventario()
     +adicionar(Inventariavel) boolean
     +remover(String) boolean
     +buscar(String) Inventariavel
@@ -162,6 +562,7 @@ namespace inventario {
     +temItem(String) boolean
     +quantidadeItem() int
     +inventarioVazio() boolean
+    +getItens() Map~String, Inventariavel~
     +listarDoTipo(Class~T~) List~T~
   }
   class Item {
@@ -171,19 +572,38 @@ namespace inventario {
     -nome : String
     -descricao : String
     -categoria : Categoria
+    +Item(String, String, String, Categoria)
+    +getId() String
+    +getNome() String
+    +getDescricao() String
+    +getCategoria() Categoria
   }
   class ModuloCura {
     -quantidadeDeCura : int
+    +ModuloCura(String, String, String, Categoria, int)
     +efeito(Jogador)
   }
   class ModuloEnergia {
     -quantidadeEnergia : int
+    +ModuloEnergia(String, String, String, Categoria, int)
     +efeito(Jogador)
   }
 }
 namespace jogo {
   class Jogo {
+    +Jogo()
     +main(String[])$
+    -demonstrarCampanha(TelaConsole)$
+    -venceSemContraAtaque(Batalha)$
+    -lutarContraChefe(Batalha, Jogador, Chefe, TelaConsole)$
+    -equiparPrimeira(Batalha, Jogador, Class~Arma~)$
+    -coletarItens(Jogador, Sala, TelaConsole)$
+    -montarMapaEixo0()$ Mapa
+    -cura(int)$ ModuloCura
+    -energia(int)$ ModuloEnergia
+    -demonstrarSandevistan(TelaConsole)$
+    -demonstrarNpcs(TelaConsole, Jogador, Sala)$
+    -demonstrarSistemaDeArmadilhas()$
   }
 }
 namespace mundo {
@@ -191,10 +611,20 @@ namespace mundo {
     -nome : String
     -salas : Map~String, Sala~
     -salaInicial : Sala
+    +Mapa(String)
+    +getNome() String
     +adicionarSala(Sala) boolean
     +definirSalaInicial(String)
+    +getSalaInicial() Sala
     +buscarSala(String) Sala
     +totalSalas() int
+    +getSalas() Map~String, Sala~
+  }
+  class NpcsDasSalas {
+    -NpcsDasSalas()
+    +temInformante(int)$ boolean
+    +temCurandeira(int, int)$ boolean
+    +colocarNpcs(Mapa)$
   }
   class Sala {
     -id : String
@@ -203,18 +633,94 @@ namespace mundo {
     -saidas : Map~String, Sala~
     -inimigos : List~Inimigo~
     -itens : List~Inventariavel~
+    -armadilhas : List~Trap~
+    -npcs : List~Npc~
     -pontoDeSalvamento : boolean
+    +Sala(String, String, String)
+    +getId() String
+    +getNome() String
+    +getDescricao() String
+    +isPontoDeSalvamento() boolean
+    +setPontoDeSalvamento(boolean)
     +conectar(String, Sala)
     +conectarBidirecional(String, String, Sala)
+    +getSaida(String) Sala
+    +getSaidas() Map~String, Sala~
     +adicionarInimigo(Inimigo)
+    +getInimigos() List~Inimigo~
+    +adicionarNpc(Npc)
+    +getNpcs() List~Npc~
     +adicionarItem(Inventariavel)
+    +getItens() List~Inventariavel~
+    +adicionarArmadilha(Trap)
+    +adicionarArmadilhas(List~Trap~)
+    +getArmadilhas() List~Trap~
+    +atualizarArmadilhas(double, DamageTarget)
+    +descrever()
   }
 }
 namespace personagens {
+  class AtaqueChefe {
+    -nome : String
+    +values()$ AtaqueChefe[]
+    +valueOf(String)$ AtaqueChefe
+    -AtaqueChefe(String)
+    +getNome() String
+    +proximo() AtaqueChefe
+  }
+  class Chefe {
+    -dano : int
+    -proximoAtaque : AtaqueChefe
+    -ataqueAtual : AtaqueChefe
+    -avisando : boolean
+    -ultimaAcao : String
+    -armadilhasDoUltimoAtaque : List~Trap~
+    +Chefe(String, int, int)
+    +getFase() int
+    +getQuantidadeTiros() int
+    +getTirosQueAcertam() int
+    +getQuantidadeBlocos() int
+    +getBlocosQueAcertam() int
+    +getQuantidadeEspinhos() int
+    +usaPrensa() boolean
+    +calcularPosicoesEspinhos(double) List~Double~
+    +iniciarAtaque(Personagem)
+    -aplicarVezes(Personagem, int, int)
+    -plantarArmadilhas(Personagem) String
+    -simularArmadilhas(List~Trap~, DamageTarget) int
+    +descreverUltimaAcao() String
+    +getNomeAtaque() String
+    +congelar(double)
+    +danoDeBuracoNegro() int
+    +getExperienciaConcedida() int
+    +getProximoAtaque() AtaqueChefe
+    +getAtaqueAtual() AtaqueChefe
+    +estaAvisando() boolean
+    +getArmadilhasDoUltimoAtaque() List~Trap~
+  }
+  class Dificuldade {
+    -nome : String
+    -multiplicadorDanoRecebido : double
+    +values()$ Dificuldade[]
+    +valueOf(String)$ Dificuldade
+    -Dificuldade(String, double)
+    +getNome() String
+    +aplicar(int) int
+  }
   class Inimigo {
     <<abstract>>
     -arma : Arma
+    -turnosCongelado : double
+    +Inimigo(String, int, Arma)
     +iniciarAtaque(Personagem)
+    +getArma() Arma
+    +getNomeAtaque() String
+    +descreverUltimaAcao() String
+    +congelar(double)
+    +estaCongelado() boolean
+    +passarTurnoCongelado() boolean
+    +getTurnosCongelado() double
+    +danoDeBuracoNegro() int
   }
   class Jogador {
     -arma : Arma
@@ -222,41 +728,138 @@ namespace personagens {
     -energiaMaxima : int
     -nivel : Nivel
     -inventario : Inventario
+    -gelo : RaioDeGelo
+    -buracoNegro : BuracoNegro
+    -dificuldade : Dificuldade
+    +Jogador(String, int, Arma, int)
+    +getEnergiaAtual() int
     +recuperarEnergia(int)
     +energiaSuficiente(int) boolean
     +consumirEnergia(int)
-    +ganharExperiencia(int)
+    +ganharExperiencia(int) boolean
+    -liberarMagias()
+    +registrarAcerto()
+    +recargaAutomaticaLiberada() boolean
+    +recarregarEnergiaPorTurno()
+    +tomarDano(int)
+    +getDificuldade() Dificuldade
+    +setDificuldade(Dificuldade)
+    +getGelo() RaioDeGelo
+    +getBuracoNegro() BuracoNegro
+    +getEnergiaMaxima() int
     +iniciarAtaque(Personagem)
     +equiparArma(String)
     +usarItem(String)
     +coletarItem(Inventariavel) boolean
+    +getArma() Arma
+    +getNivel() Nivel
+    +getInventario() Inventario
   }
   class Melee {
+    +Melee(String, int, int, double)
+    +getExperienciaConcedida() int
   }
   class Nivel {
     -nivelAtual : int
     -experienciaAtual : int
     -experienciaParaProximoNivel : int
+    +Nivel()
     +ganharExperiencia(int) boolean
+    -subirNivel()
+    +getNivelAtual() int
+    +getExperienciaAtual() int
+    +getExperienciaParaProximoNivel() int
+  }
+  class Npc {
+    <<abstract>>
+    -falas : List~String~
+    -indiceFala : int
+    +Npc(String, List~String~)
+    +interagir(Personagem)* String
+    +tomarDano(int)
+    +getFalaAtual() String
+    +getQuantidadeFalas() int
+    #estaNaUltimaFala() boolean
+    +avancarFala() String
+    +toString() String
+  }
+  class NpcChefe {
+    -chefe : Chefe
+    -conversaCompleta : boolean
+    -despertou : boolean
+    +NpcChefe(String, List~String~, Chefe)
+    +interagir(Personagem) String
+    +conversaCompleta() boolean
+    +despertar() Chefe
+  }
+  class NpcCurandeiro {
+    -curasRestantes : int
+    -custoEnergia : int
+    +NpcCurandeiro(String, List~String~, int)
+    +NpcCurandeiro(String, List~String~, int, int)
+    +interagir(Personagem) String
+    +getCurasRestantes() int
+    +getCustoEnergia() int
+  }
+  class NpcInformante {
+    +NpcInformante(String, List~String~)
+    +interagir(Personagem) String
   }
   class Personagem {
     -nome : String
     -vidaAtual : int
     -vidaMaxima : int
+    -x : double
+    -y : double
+    -hitbox : Hitbox
+    -invulnerabilityTimer : double
+    -ultimoKnockbackX : double
+    -ultimoKnockbackY : double
+    +Personagem(String, int)
+    +Personagem(String, int, double, double)
+    +Personagem(String, int, double, double, double, double)
+    +getNome() String
+    +getVidaAtual() int
+    +getVidaMaxima() int
     +tomarDano(int)
     +curar(int)
+    #aumentarVidaMaxima(int)
     +estaMorto() boolean
     +estaSaudavel() boolean
+    +atualizar(double)
+    +moverPara(double, double)
+    +takeDamage(int, DamageSource)
+    +applyKnockback(double, double)
+    +getX() double
+    +setX(double)
+    +getY() double
+    +setY(double)
+    +getHitbox() Hitbox
+    +isAlive() boolean
+    +isInvulnerable() boolean
+    +activateInvulnerability(double)
+    +getUltimoKnockbackX() double
+    +getUltimoKnockbackY() double
     +toString() String
   }
   class Sniper {
+    +Sniper(String, int, int, double)
+    +getExperienciaConcedida() int
   }
   class Voador {
+    +Voador(String, int, int, double)
+    +getExperienciaConcedida() int
   }
 }
 namespace visao {
   class TelaConsole {
     -saida : PrintStream
+    -entrada : BufferedReader
+    +TelaConsole()
+    +TelaConsole(PrintStream)
+    +TelaConsole(PrintStream, InputStream)
+    +doTerminal()$ TelaConsole
+    +esperarEnter()
     +titulo(String)
     +mostrarMensagem(String)
     +mostrarErro(String)
@@ -265,58 +868,96 @@ namespace visao {
     +mostrarJogador(Jogador)
     +mostrarAtaque(String, Personagem, int)
     +mostrarRecompensa(Inimigo, int)
+    +mostrarSubidaDeNivel(Jogador, int)
     +mostrarSala(Sala)
+    -barraDeVida(Personagem) String
   }
 }
 class Exception {
   <<Java>>
 }
+Trap --> "1" Hitbox : damageHitbox
+Trap --> "1" Hitbox : triggerBox
+Trap --> "1" TrapState : state
+Trap --> "*" TrapListener : listeners
+TrapProceduralGenerator --> "1" TrapGenerationConfig : config
 Batalha --> "1" Jogador : jogador
 Batalha --> "*" Inimigo : inimigos
 Batalha --> "1" TelaConsole : tela
+Batalha --> "1" SandevistanMichyle : sandevistan
+Batalha --> "*" Habilidade : habilidadesUsadas
+Dialogo --> "1" Jogador : jogador
+Dialogo --> "1" TelaConsole : tela
+BuracoNegro --> "*" Personagem : alvos
+SandevistanMichyle --> "1" Cyberpsicose : cyberpsicose
 Inventario --> "*" Inventariavel : itens
 Item --> "1" Categoria : categoria
 Mapa --> "*" Sala : salas
 Mapa --> "1" Sala : salaInicial
-Mapa ..> SalaNaoEncontradaException : lança
+Sala --> "*" Sala : saidas
 Sala --> "*" Inimigo : inimigos
 Sala --> "*" Inventariavel : itens
+Sala --> "*" Trap : armadilhas
+Sala --> "*" Npc : npcs
+Chefe --> "1" AtaqueChefe : proximoAtaque
+Chefe --> "1" AtaqueChefe : ataqueAtual
+Chefe --> "*" Trap : armadilhasDoUltimoAtaque
 Inimigo --> "1" Arma : arma
 Jogador --> "1" Arma : arma
 Jogador --> "1" Nivel : nivel
 Jogador --> "1" Inventario : inventario
+Jogador --> "1" RaioDeGelo : gelo
+Jogador --> "1" BuracoNegro : buracoNegro
+Jogador --> "1" Dificuldade : dificuldade
+NpcChefe --> "1" Chefe : chefe
+Personagem --> "1" Hitbox : hitbox
+Mapa ..> SalaNaoEncontradaException : lança
 Jogador ..> ItemNaoEncontradoException : lança
 Jogador ..> ItemIncompativelException : lança
-JogoException <|-- SalaNaoEncontradaException
+Trap <|-- BlocoQueCai
+Trap <|-- SpikesRetrateis
+DamageSource <|.. Trap
+TrapProceduralGenerator <|-- TrapSpawner
+Arma <|-- AdagaDupla
+Inventariavel <|.. Arma
+Arma <|-- ArmaDeFogo
+Arma <|-- Espada
+Arma <|-- Marreta
+ArmaDeFogo <|-- PistolaDuplaDePlasma
+ArmaDeFogo <|-- RifleSniper
+Perfurante <|.. RifleSniper
+Arma <|-- Sabre
+ArmaDeFogo <|-- Shotgun
 JogoException <|-- ItemIncompativelException
 JogoException <|-- ItemNaoEncontradoException
 Exception <|-- JogoException
-Personagem <|-- Jogador
-Atacante <|.. Jogador
-Inimigo <|-- Voador
-Inimigo <|-- Sniper
-Atacavel <|.. Personagem
-Inimigo <|-- Melee
-Personagem <|-- Inimigo
-Atacante <|.. Inimigo
-ConcedeExperiencia <|.. Inimigo
-Habilidade <|-- GolpeDeEnergia
-GolpeDeEnergia <|-- BolaDeFogo
-Habilidade <|-- Dash
+JogoException <|-- SalaNaoEncontradaException
 Habilidade <|-- Apara
+GolpeDeEnergia <|-- BolaDeFogo
+Habilidade <|-- BuracoNegro
+Efeito <|.. Cyberpsicose
+Habilidade <|-- Dash
+Habilidade <|-- GolpeDeEnergia
 Habilidade <|-- PuloDuplo
-Item <|-- ModuloEnergia
-Consumivel <|.. ModuloEnergia
+GolpeDeEnergia <|-- RaioDeGelo
+Habilidade <|-- SandevistanMichyle
 Inventariavel <|.. Item
 Item <|-- ModuloCura
 Consumivel <|.. ModuloCura
-Arma <|-- Sabre
-ArmaDeFogo <|-- RifleSniper
-Perfurante <|.. RifleSniper
-Arma <|-- Marreta
-ArmaDeFogo <|-- PistolaDuplaDePlasma
-Arma <|-- Espada
-Arma <|-- ArmaDeFogo
-Arma <|-- AdagaDupla
-Inventariavel <|.. Arma
-ArmaDeFogo <|-- Shotgun
+Item <|-- ModuloEnergia
+Consumivel <|.. ModuloEnergia
+Inimigo <|-- Chefe
+Personagem <|-- Inimigo
+Atacante <|.. Inimigo
+ConcedeExperiencia <|.. Inimigo
+Personagem <|-- Jogador
+Atacante <|.. Jogador
+Inimigo <|-- Melee
+Personagem <|-- Npc
+Npc <|-- NpcChefe
+Npc <|-- NpcCurandeiro
+Npc <|-- NpcInformante
+Atacavel <|.. Personagem
+DamageTarget <|.. Personagem
+Inimigo <|-- Sniper
+Inimigo <|-- Voador

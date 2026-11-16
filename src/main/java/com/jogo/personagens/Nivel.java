@@ -30,7 +30,8 @@ public class Nivel {
     private void subirNivel() {
         nivelAtual++;
         experienciaAtual -= experienciaParaProximoNivel;
-        experienciaParaProximoNivel = (int)(experienciaParaProximoNivel * 1.5);
+        //Mesma conta do FXGL: 100, 150, 200, 250... (+50 por nível)
+        experienciaParaProximoNivel = 100 + (nivelAtual - 1) * 50;
     }
 
     public int getNivelAtual() {

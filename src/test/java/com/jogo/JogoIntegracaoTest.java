@@ -26,6 +26,8 @@ class JogoIntegracaoTest {
         }
         String saida = capturado.toString(StandardCharsets.UTF_8);
         assertTrue(saida.contains("Vitória!"));
+        assertTrue(saida.contains("NEXUS desperta! A luta começou."));
+        assertTrue(saida.contains("NEXUS derrotado. Fim do jogo!"));
         assertTrue(saida.contains("[!] Sala não encontrada no mapa"));
         assertTrue(saida.contains("Marreta tirou 14"));
         assertTrue(saida.contains("Shotgun tirou 20"));

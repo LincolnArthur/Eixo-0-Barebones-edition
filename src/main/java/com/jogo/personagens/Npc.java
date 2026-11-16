@@ -47,6 +47,15 @@ public abstract class Npc extends Personagem {
         return falas.get(indiceFala);
     }
 
+    public int getQuantidadeFalas() {
+        return falas.size();
+    }
+
+    //Se a fala atual é a última (o NpcChefe usa pra começar a luta)
+    protected boolean estaNaUltimaFala() {
+        return indiceFala == falas.size() - 1;
+    }
+
     //Passa pra próxima fala; depois da última volta pra primeira
     public String avancarFala() {
         indiceFala = (indiceFala + 1) % falas.size();

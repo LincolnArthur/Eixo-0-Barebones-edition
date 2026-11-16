@@ -60,7 +60,17 @@ public abstract class Habilidade {
     }
 
     public boolean podeUsar(Jogador player) {
-        return isAprendida() && estaDisponivel() && player.energiaSuficiente(custoEnergia);
+        return isAprendida() && estaDisponivel() && player.energiaSuficiente(custoPara(player));
+    }
+
+    //Quanto essa habilidade gasta agora. Padrão: o custo fixo do
+    //construtor. O BuracoNegro sobrescreve (gasta toda a energia máxima).
+    public int custoPara(Jogador player) {
+        return custoEnergia;
+    }
+
+    public double getTempoRestante() {
+        return tempoRestante;
     }
 
     // alvo pode ser null pra habilidades que não miram em ninguém (ex: Apara, Dash) -lincoln
@@ -68,7 +78,7 @@ public abstract class Habilidade {
         if (!podeUsar(player)) {
             return false;
         }
-        player.consumirEnergia(custoEnergia);
+        player.consumirEnergia(custoPara(player));
         executar(player, alvo);
         tempoRestante = tempoEspera;
         return true;

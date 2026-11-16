@@ -7,6 +7,7 @@ import com.jogo.habilidades.BolaDeFogo;
 import com.jogo.inventario.Categoria;
 import com.jogo.inventario.ModuloCura;
 import com.jogo.personagens.Inimigo;
+import com.jogo.personagens.Chefe;
 import com.jogo.personagens.Jogador;
 import com.jogo.personagens.Melee;
 import com.jogo.personagens.Sniper;
@@ -132,5 +133,48 @@ class BatalhaIntegracaoTest {
         perdida.turnoDosInimigos();
         assertTrue(perdida.jogadorPerdeu());
         assertFalse(perdida.jogadorVenceu());
+    }
+
+    @Test
+    @DisplayName("Acertar um inimigo devolve energia; passar o turno não (antes do nível 6)")
+    void energiaPorAcerto() {
+        jogador.consumirEnergia(50);
+        batalha.turnoDosInimigos();
+        assertEquals(0, jogador.getEnergiaAtual());
+        batalha.jogadorAtaca(atirador);
+        assertEquals(Jogador.ENERGIA_POR_ACERTO, jogador.getEnergiaAtual());
+    }
+
+    @Test
+    @DisplayName("Inimigo congelado pelo Raio de Gelo perde o turno")
+    void congeladoPerdeTurno() {
+        jogador.ganharExperiencia(100); //nível 2: libera o gelo (vida vai a 120)
+        assertTrue(batalha.usarGelo(atirador));
+        batalha.turnoDosInimigos();
+        assertEquals(120 - 8 - 6, jogador.getVidaAtual()); //o Atirador não atacou
+        assertTrue(saida().contains("congelado e perde o turno"));
+    }
+
+    @Test
+    @DisplayName("Buraco Negro derrota todos os inimigos e dá o XP de cada um")
+    void buracoNegro() {
+        assertFalse(batalha.usarBuracoNegro()); //nível 1: ainda não liberado
+        jogador.ganharExperiencia(250);          //nível 3
+        assertTrue(batalha.usarBuracoNegro());
+        assertTrue(batalha.jogadorVenceu());
+        assertTrue(saida().contains("Buraco Negro"));
+    }
+
+    @Test
+    @DisplayName("Luta com o chefe: aviso num turno, ataque no outro")
+    void chefe() {
+        Chefe nexus = new Chefe("NEXUS", 450, 12);
+        Batalha luta = new Batalha(jogador, List.of(nexus), new TelaConsole(new PrintStream(capturado, true, StandardCharsets.UTF_8)));
+        luta.turnoDosInimigos();
+        assertEquals(100, jogador.getVidaAtual());
+        assertTrue(saida().contains("prepara: Rajada"));
+        luta.turnoDosInimigos();
+        assertEquals(100 - 24, jogador.getVidaAtual());
+        assertTrue(saida().contains("NEXUS (Rajada)"));
     }
 }

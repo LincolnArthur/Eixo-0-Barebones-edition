@@ -87,6 +87,14 @@ public class Personagem implements Atacavel, DamageTarget {
         this.vidaAtual = Math.min(vidaMaxima, this.vidaAtual + quantidade);
     }
 
+    //Só as filhas (ex.: Jogador ao subir de nível) podem aumentar a vida
+    //máxima; quem está fora da família não mexe
+    protected void aumentarVidaMaxima(int quantidade) {
+        if (quantidade > 0) {
+            this.vidaMaxima += quantidade;
+        }
+    }
+
     //Verifica se o character está morto -lincoln
     @Override
     public boolean estaMorto() {

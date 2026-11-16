@@ -3,9 +3,14 @@ package com.jogo.visao;
 import com.jogo.inventario.Inventariavel;
 import com.jogo.personagens.Inimigo;
 import com.jogo.personagens.Jogador;
+import com.jogo.personagens.Npc;
 import com.jogo.personagens.Personagem;
 import com.jogo.mundo.Sala;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +23,9 @@ import java.util.Map;
 public class TelaConsole {
 
     private final PrintStream saida;
+    //Teclado (só quando roda num terminal de verdade): Enter passa as falas.
+    //null = não espera nada (testes, saída redirecionada)
+    private BufferedReader entrada;
 
     //Padrão: imprime no console de verdade
     public TelaConsole() {
@@ -28,6 +36,34 @@ public class TelaConsole {
     //que foi impresso
     public TelaConsole(PrintStream saida) {
         this.saida = saida;
+    }
+
+    //Sobrecarga com teclado: esperarEnter() passa a esperar o Enter
+    public TelaConsole(PrintStream saida, InputStream teclado) {
+        this.saida = saida;
+        this.entrada = teclado == null ? null : new BufferedReader(new InputStreamReader(teclado));
+    }
+
+    //Tela do main: espera o Enter só se estiver num terminal (no teste e
+    //com a saída redirecionada não tem console, então não trava)
+    public static TelaConsole doTerminal() {
+        return System.console() != null ? new TelaConsole(System.out, System.in) : new TelaConsole();
+    }
+
+    //Enter passa a fala (igual ao Enter dos NPCs no FXGL)
+    public void esperarEnter() {
+        if (entrada == null) {
+            return;
+        }
+        saida.print("   [Enter]");
+        saida.flush();
+        try {
+            if (entrada.readLine() == null) {
+                entrada = null; //fim da entrada: para de esperar
+            }
+        } catch (IOException e) {
+            entrada = null;
+        }
     }
 
     public void titulo(String texto) {
@@ -74,6 +110,22 @@ public class TelaConsole {
         saida.println(inimigo.getNome() + " vale " + xp + " de XP");
     }
 
+    public void mostrarSubidaDeNivel(Jogador jogador, int nivelAntes) {
+        int nivel = jogador.getNivel().getNivelAtual();
+        StringBuilder linha = new StringBuilder(jogador.getNome() + " subiu para o nível " + nivel
+                + "! Vida máxima " + jogador.getVidaMaxima() + " (vida cheia).");
+        if (nivelAntes < Jogador.NIVEL_GELO && nivel >= Jogador.NIVEL_GELO) {
+            linha.append(" Nova magia: Raio de Gelo.");
+        }
+        if (nivelAntes < Jogador.NIVEL_BURACO_NEGRO && nivel >= Jogador.NIVEL_BURACO_NEGRO) {
+            linha.append(" Nova magia: Buraco Negro.");
+        }
+        if (nivelAntes < Jogador.NIVEL_RECARGA_AUTOMATICA && nivel >= Jogador.NIVEL_RECARGA_AUTOMATICA) {
+            linha.append(" A energia agora recarrega sozinha.");
+        }
+        saida.println(linha);
+    }
+
     //Era o Sala.descrever(): o modelo não imprime mais nada
     public void mostrarSala(Sala sala) {
         saida.println("========== " + sala.getNome().toUpperCase() + " ==========");
@@ -85,6 +137,13 @@ public class TelaConsole {
             StringBuilder linha = new StringBuilder("Itens na sala: ");
             for (Inventariavel item : sala.getItens()) {
                 linha.append("[").append(item.getNome()).append("] ");
+            }
+            saida.println(linha.toString().trim());
+        }
+        if (!sala.getNpcs().isEmpty()) {
+            StringBuilder linha = new StringBuilder("NPCs: ");
+            for (Npc npc : sala.getNpcs()) {
+                linha.append("[").append(npc.getNome()).append("] ");
             }
             saida.println(linha.toString().trim());
         }

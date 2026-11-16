@@ -1,5 +1,7 @@
 package com.jogo.personagens;
 
+import com.jogo.habilidades.BuracoNegro;
+import com.jogo.habilidades.RaioDeGelo;
 import com.jogo.combate.Arma;
 import com.jogo.combate.Atacante;
 import com.jogo.combate.Ataque;
@@ -19,6 +21,25 @@ public class Jogador extends Personagem implements Atacante {
     //private List<Habilidade> habilidades;
     
     private final Inventario inventario; //cada jogador tem seu inventario
+
+    //Magias liberadas por nível (nascem não aprendidas; subir de nível
+    //libera), iguais às do FXGL. Gelo: 20 de energia, dano 8, congela 3
+    //turnos, espera 3. Buraco Negro: toda a energia, espera 20.
+    public static final int NIVEL_GELO = 2;
+    public static final int NIVEL_BURACO_NEGRO = 3;
+    private final RaioDeGelo gelo = new RaioDeGelo(false, 3.0, 20, 8, 3.0);
+    private final BuracoNegro buracoNegro = new BuracoNegro(false, 20.0);
+
+    //Energia: até o nível 6 ela NÃO recarrega sozinha; só volta acertando
+    //inimigos (ENERGIA_POR_ACERTO por acerto) ou com Módulo de Energia. A
+    //partir do nível 6 também recarrega RECARGA_POR_TURNO por turno.
+    public static final int NIVEL_RECARGA_AUTOMATICA = 6;
+    public static final int ENERGIA_POR_ACERTO = 3;
+    public static final int RECARGA_POR_TURNO = 1;
+    //Ao subir de nível: +20 de vida máxima e vida cheia
+    public static final int VIDA_POR_NIVEL = 20;
+
+    private Dificuldade dificuldade = Dificuldade.NORMAL;
 
     public Jogador(String nome, int vidaMaxima, Arma arma, int energiaMaxima) {
         super(nome, vidaMaxima);
@@ -58,11 +79,72 @@ public class Jogador extends Personagem implements Atacante {
         this.energiaAtual= Math.max(0,energiaAtual - custoEnergia);
     }
 
-    public void ganharExperiencia(int quantidade) {
+    //Devolve true se subiu de nível (um ou mais). A cada nível novo:
+    //+20 de vida máxima, vida cheia e libera as magias do nível
+    public boolean ganharExperiencia(int quantidade) {
+        int nivelAntes = nivel.getNivelAtual();
         boolean subiuNivel = nivel.ganharExperiencia(quantidade);
         if (subiuNivel) {
-            //Logica de habilidade -lincoln
+            aumentarVidaMaxima(VIDA_POR_NIVEL * (nivel.getNivelAtual() - nivelAntes));
+            curar(getVidaMaxima());
+            liberarMagias();
         }
+        return subiuNivel;
+    }
+
+    private void liberarMagias() {
+        if (nivel.getNivelAtual() >= NIVEL_GELO) {
+            gelo.setAprendida(true);
+        }
+        if (nivel.getNivelAtual() >= NIVEL_BURACO_NEGRO) {
+            buracoNegro.setAprendida(true);
+        }
+    }
+
+    //=== Energia por acerto e recarga a partir do nível 6 ===
+
+    //Chamado pelo controle quando um ataque do jogador acerta um inimigo
+    public void registrarAcerto() {
+        recuperarEnergia(ENERGIA_POR_ACERTO);
+    }
+
+    public boolean recargaAutomaticaLiberada() {
+        return nivel.getNivelAtual() >= NIVEL_RECARGA_AUTOMATICA;
+    }
+
+    //Chamado pelo controle a cada turno; só faz algo a partir do nível 6
+    public void recarregarEnergiaPorTurno() {
+        if (recargaAutomaticaLiberada()) {
+            recuperarEnergia(RECARGA_POR_TURNO);
+        }
+    }
+
+    //=== Dificuldade ===
+
+    //Sobrescreve o tomarDano() do Personagem: aplica a dificuldade e
+    //deixa o resto (invencibilidade, vida não negativa) com a mãe
+    @Override
+    public void tomarDano(int quantidade) {
+        super.tomarDano(dificuldade.aplicar(quantidade));
+    }
+
+    public Dificuldade getDificuldade() {
+        return dificuldade;
+    }
+
+    public void setDificuldade(Dificuldade dificuldade) {
+        if (dificuldade == null) {
+            throw new IllegalArgumentException("Dificuldade não pode ser nula");
+        }
+        this.dificuldade = dificuldade;
+    }
+
+    public RaioDeGelo getGelo() {
+        return gelo;
+    }
+
+    public BuracoNegro getBuracoNegro() {
+        return buracoNegro;
     }
 
     public int getEnergiaMaxima() {
